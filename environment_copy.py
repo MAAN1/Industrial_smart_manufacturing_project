@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 from gym import spaces
-from ActionsSet_MultiAgentWS import ActionsSet_Task, ActionsSet_Resource
+from Action_assignment import ActionsSet_Task, ActionsSet_Resource
 class Assembly_line_Env(gym.Env):
 	def __init__(self):
 		self.WorkstationsNumber = 2
