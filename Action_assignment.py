@@ -3,26 +3,25 @@
 import numpy as np
 import random
 
-def ActionsSet_Task(T):
+def task_assignment_action(T):
     k = T
-    actionSet_Task = []
+    job_assignment_action = []
     null_action = np.zeros(k)
     Identity = np.identity(k)
-    actionSet_Task.append(null_action)
+    job_assignment_action.append(null_action)
     for i in range(k):
-        actionSet_Task.append(Identity[i][:])
-    return actionSet_Task
+        job_assignment_action.append(Identity[i][:])
+    return job_assignment_action
 
-
-def ActionsSet_Resource(R):
+def Resource_assignmnet_action(R):
     t = R
-    actionSet_Resource = []
+    Resource_assignment = []
     null_action = np.zeros(t)
     Identity = np.identity(t)
-    actionSet_Resource.append(null_action)
+    Resource_assignment.append(null_action)
     for i in range(t):
-        actionSet_Resource.append(Identity[i][:])
-    return actionSet_Resource
+        Resource_assignment.append(Identity[i][:])
+    return Resource_assignment
 
 def Task_Resource_constraint_generator(R,T):
     Identity = np.identity(R)
