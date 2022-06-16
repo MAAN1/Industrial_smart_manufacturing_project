@@ -10,13 +10,6 @@ from numpy import savez_compressed
 EPISODES = 50
 Max_Steps = 65
 
-"""
-Environment initialization
-agent initialization (state, action)
-...
-storage variables are initialization
-"""
-
 if __name__ == "__main__":
     env = Assembly_line_Env()
     state_size = env.observation_space.shape[0]
