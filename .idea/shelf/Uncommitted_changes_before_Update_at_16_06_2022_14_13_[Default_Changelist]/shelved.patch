@@ -1,0 +1,486 @@
+Index: P_1_DL.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch.nn as nn\r\n\"\"\"\r\nWe brow some deep learning part to help us to handel the large, complex state and action spaces in RL domain.\r\nThe success of that method (DL+RL)in gaming, finianianl institiuation and recodmenattaion system, clude and system already successfull.   \r\nDeep Learning Part (DL)\r\nNN Network class for Agent (Brain/calculation of input and wights) \r\nDone\r\n\"\"\"\r\nclass DQN(nn.Module):\r\n    def __init__(self, state_size, action_size):\r\n        super(DQN, self).__init__()\r\n        self.fc = nn.Sequential(\r\n            nn.Linear(state_size, 24),\r\n            nn.ReLU(),\r\n            nn.Linear(24, 24),\r\n            nn.ReLU(),\r\n            nn.Linear(24, action_size)\r\n        )\r\n    def forward(self, x):\r\n\r\n        return self.fc(x)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/P_1_DL.py b/P_1_DL.py
+--- a/P_1_DL.py	(revision 8924e302c31415e5f56bdcedea1f52bbb48d3b22)
++++ b/P_1_DL.py	(date 1655380909351)
+@@ -1,11 +1,5 @@
+ import torch.nn as nn
+-"""
+-We brow some deep learning part to help us to handel the large, complex state and action spaces in RL domain.
+-The success of that method (DL+RL)in gaming, finianianl institiuation and recodmenattaion system, clude and system already successfull.   
+-Deep Learning Part (DL)
+-NN Network class for Agent (Brain/calculation of input and wights) 
+-Done
+-"""
++
+ class DQN(nn.Module):
+     def __init__(self, state_size, action_size):
+         super(DQN, self).__init__()
+Index: Environment.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import gym\r\nimport numpy as np\r\nfrom gym import spaces\r\nfrom Action_assignment import ActionsSet_Task, ActionsSet_Resource\r\nclass Assembly_line_Env(gym.Env):\r\n\tdef __init__(self):\r\n\t\tself.WorkstationsNumber = 2\r\n\t\tself.TasksNumber = 15\r\n\t\tself.ResourcesNumber = 3\r\n\t\tself.ActionsSet_Task_W1 = ActionsSet_Task(self.TasksNumber)\r\n\t\tself.ActionsSet_Resource_W1 = ActionsSet_Resource(self.ResourcesNumber)\r\n\t\tself.ActionsSet_Task_W2 = ActionsSet_Task(self.TasksNumber)\r\n\t\tself.ActionsSet_Resource_W2 = ActionsSet_Resource(self.ResourcesNumber)\r\n\t\thigh = np.full(self.WorkstationsNumber + self.TasksNumber + self.WorkstationsNumber*self.ResourcesNumber+1, np.finfo(np.float32).max)\r\n\r\n\t\t# Number of actions in our environment\r\n\t\tself.ActionSpace_task_number = spaces.Discrete(self.TasksNumber+1)\r\n\t\tself.ActionSpace_resource_number = spaces.Discrete(self.ResourcesNumber+1)\r\n\r\n\t\t# Observation space in our case\r\n\t\tself.observation_space = spaces.Box(-high, high, dtype=np.float32)\r\n\t\tself.state = None\r\n\t\tself.steps_beyond_done = None\r\n\t\tself.T_R_C = [[1,0,0],[0,1,0], [0,1,0],[1,0,0], [0,0,1],[0,0,1], [0,1,0],[0,1,0] , [0,0,1], [1,0,0], [1,0,0], [0,1,0], [0,1,0], [0,0,1], [1,0,0]]\r\n\t\tself.Tasks_duration=[5,3,8,7,6,5,4,4,8,5,10,6,5,4,5]\r\n\t\tself.T_P_C = [\r\n\t\t\t\t\t[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\r\n\t\t\t\t\t[-1,0,0,0,-1,0,-1,-1,-1,0,0,0,0,0 ,0],[0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0],\r\n\t\t\t\t\t[0,0,1,0,0,0,0,-1,0,0,0,0,0,0,0],[-1,-1,-1,-1,-1,0,-1,-1,-1,0,0,0,0,0,0],\r\n\t\t\t\t\t[-1,0,1,0,-1,1,0,-1,0,0,0,0,0,0,0],\r\n\t\t\t\t\t[0,0,1,0,1,1,1,0,1,0,0,0,0,0,0],[0,0,1,0,0,1,1,-1,0,0,0,0,0,0,0],\r\n\t\t\t\t\t[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\r\n\t\t\t\t\t[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],\r\n\t\t\t\t\t[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\r\n\t\t\t\t\t]\r\n\t\tself.time = 0\r\n\t\tself.time_init = 0\r\n\t\tself.WS_busy_duration = np.zeros(self.WorkstationsNumber)\r\n\t\tself.WS_resource = np.zeros(self.WorkstationsNumber * self.ResourcesNumber)\r\n\t\tself.total_Tasks_duration = np.zeros(1)\r\n\t\tself.n_start_time = [] # execution start at specific location\r\n\t\tself.n_duration = []\r\n\t\tself.n_bay_start = [] # at which workstation\r\n\t\tself.n_job_id = []\r\n\t\tself.n_start_time_R = [] # resource assignment location\r\n\t\tself.n_duration_R = []\r\n\t\tself.n_bay_start_R = []\r\n\t\tself.n_job_id_R = []\r\n\t\tself.C_max = np.zeros(1)\r\n\t\tself.workstation_processing_task = np.zeros(self.WorkstationsNumber)\r\n\t\t# workstation status checking\r\n\tdef twin_check(self, action_task_WS1, action_task_WS2):\r\n\t\ttwin = 0\r\n\t\tif action_task_WS1 > 0:\r\n\t\t\tif action_task_WS1 == action_task_WS2:\r\n\t\t\t\t#print(\"work_station_1 and 2 requesting same task\")\r\n\t\t\t\ttwin = 1\r\n\t\treturn twin\r\n\tdef observation(self):\r\n\t\tpass\r\n\t\treturn\r\n\r\n\tdef step(self, action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2):\r\n\t\t\"\"\"\r\n\t\t:param action_task_WS1:\r\n\t\t:param action_resource_WS1:\r\n\t\t:param action_task_WS2:\r\n\t\t:param action_resource_WS2:\r\n\t\t:return:\r\n\t\t\"\"\"\r\n\r\n\t\tactions = [action_task_WS1, action_task_WS2]\r\n\t\t# print(\"Available actions:\", actions)\r\n\r\n\t\tC_max = self.C_max\r\n\t\tW = self.WorkstationsNumber\r\n\t\tT =self.TasksNumber\r\n\t\tR =self.ResourcesNumber\r\n\r\n\t\tWorkstationsState = self.state[:W]\r\n\t\tTasksState = self.state[W:W+T]\r\n\t\tResourcesState =self.state[W+T:W+T+W*R]\r\n\t\tAssignedState = self.state[W+T+W*R:]        # final assigned state of task by respecting workstation, resource and precdience constraints\r\n\t\ttot_task_duration = self.total_Tasks_duration\r\n\r\n\t\t\"\"\"\r\n\t\tResource constraints\r\n\t\t\"\"\"\r\n\t\tT_R_C = self.T_R_C                  # \tResource constraints\r\n\t\t#T_P_C = self.T_P_C                  #   Task constraints\r\n\r\n\t\t# Processing variables\r\n\t\tTasks_duration = self.Tasks_duration\r\n\t\tWS_busy_duration = self.WS_busy_duration # (6) [(1,0,0),(1,0,0)]\r\n\t\tWS_resource = self.WS_resource\r\n\t\ttime = self.time\r\n\r\n\t\t\"\"\"\r\n\t\tResource assignment reward \r\n\t\ttask assignment reward\r\n\t\tcomments: Both task and resource are learning skills for agent \r\n\t\ttask concatination\r\n\t\t\"\"\"\r\n\r\n\t\tgood_resource_assignment_reward = 0\r\n\t\tbad_resource_assignment_reward = 0\r\n\t\ttask_assignment_reward = 0\r\n\r\n\t\ta_task_W1 = self.ActionsSet_Task_W1[action_task_WS1][:] # list of tasks (location) , action_task_WS1 is number\r\n\t\ta_task_W2 = self.ActionsSet_Task_W1[action_task_WS2][:] # ....................................................\r\n\r\n\t\ta1 = np.concatenate([a_task_W1, a_task_W2])\t\t# concatination of both task assignment  [1......30]\r\n\r\n\t\ta_resource_W1 = self.ActionsSet_Resource_W1[action_resource_WS1][:]\r\n\t\ta_resource_W2 = self.ActionsSet_Resource_W2[action_resource_WS2][:]\r\n\r\n\t\ta2 = np.concatenate([a_resource_W1, a_resource_W2])\t# concatination of both resource assignment task [1....6]\r\n\r\n\t\t\"\"\"\r\n\t\ta_1: list of all available actions at starting point \r\n\t\ta_2: List of assigned resource \r\n\t\t\"\"\"\r\n\t\t\"\"\"\r\n\t\ta1: joint action\r\n\t\ta2: for resources (r1,r2) assignment action joint action\r\n\t\ta_final_matrix of actions : is final action for execution respecting all constraint , resource , presidence and workstation availabily\r\n\t\tif a is feasible this action is feasible in our case \r\n\t\t\"\"\"\r\n\t\ta_final_matrix = np.concatenate([a1, a2])               # final matrix of both task and resource assignment\r\n\t\tsize_a = len(a_final_matrix)\r\n\t\t#print(\"the size of size_a:\", a, size_a)\r\n\t\tAssignedStateTemp = AssignedState[0]\r\n\t\t# action assigns task?\r\n\t\t\"\"\"\r\n\t\tremaining task for execution for future assignment \r\n\t\t\"\"\"\r\n\t\tremaing_task = 0\r\n\t\tfor i in range(len(a1)):\r\n\t\t\tremaing_task += a_final_matrix[i]\r\n\r\n\t\tW = self.WorkstationsNumber\r\n\t\tT = self.TasksNumber\r\n\t\tT_P_C = self.T_P_C\r\n\r\n\t\t\"\"\"\r\n\t\tStep: 1\r\n\t\tNeed to be debug \r\n\t\tConstraint check: Resource status, currently assigned task and then we assign an other task if that available\r\n\t\tResource constraint checking:\r\n\t\tfirst we check what type of  resource is required for task execution e.g 1,2,3 \r\n\t\t\"\"\"\r\n\t\tunfeasible_resource = 0\r\n\t\tfor i in range(W):\r\n\t\t\tfor j in range(T):\r\n\t\t\t\tif a1[i*T+j] == 1:\r\n\t\t\t\t\tRequired_R = [i for i, x in enumerate(T_R_C[j][:]) if x == 1]\r\n\t\t\t\t\tif ResourcesState[i*R+Required_R[0]] == 0 and a2[i*R+Required_R[0]] == 0:\r\n\t\t\t\t\t\tunfeasible_resource = 1\r\n\t\t\t\t\t\tbreak\r\n\t\t\t\tif unfeasible_resource == 1:\r\n\t\t\t\t\tbreak\r\n\t\t# End of resource checking constraint\r\n\r\n\r\n\t\t\"\"\"\r\n\t\tStep: 2 Task assignment and  workstation busy duration \r\n\t\t\"\"\"\r\n\t\tif unfeasible_resource == 0:\r\n\t\t\tfor i in range(W):\r\n\t\t\t\tif WorkstationsState[i] == 1:  # workstation is working on task\r\n\t\t\t\t\tWS_busy_duration[i]-=1 \t   # we assign the task duartion to workstation busy duration\r\n\t\t\t\t\ttot_task_duration-=1\t   # we reduce the by 1\r\n\t\t\t\t\tif WS_busy_duration[i] == 0:\r\n\t\t\t\t\t\tWorkstationsState[i] = 0\r\n\r\n\t\t\tif remaing_task > 0:\r\n\t\t\t\ttask_index = [i for i, x in enumerate(TasksState) if x == 0] # print(\"These task are still pending for execution\", task_index)\r\n\t\t\t\tfor i in range(W):\r\n\t\t\t\t\tfor z in range(len(task_index)):\r\n\t\t\t\t\t\tif a_final_matrix[i*T+task_index[z]] == 1:\r\n\t\t\t\t\t\t\tTasksState[task_index[z]] = 1\r\n\t\t\t\t\t\t\tWorkstationsState[i] = 1                               # task_assignment to workstation\r\n\t\t\t\t\t\t\tWS_busy_duration[i] = Tasks_duration[task_index[z]]\r\n\t\t\t\t\t\t\tAssignedState[0] += 1\r\n\t\t\t\t\t\t\t# Task execution start\r\n\t\t\t\t\t\t\tself.n_start_time.append(time)\r\n\t\t\t\t\t\t\tself.n_duration.append(Tasks_duration[task_index[z]]+1)     # +1 is given by the release time\r\n\t\t\t\t\t\t\tself.n_bay_start.append(i)                                  # at which workstation task start execution\r\n\t\t\t\t\t\t\tself.n_job_id.append(str(task_index[z]+1))   \t\t\t\t# job id\r\n\t\t\t\t\t\t\t#print('Task # ', task_index[z]+1 ,'which has a duration of ',Tasks_duration[task_index[z]], ' has been assigned to WS : ',i+1, \" at the following state\", AssignedState)\r\n\t\t\t\t\t\t\t# decrease in resources\r\n\t\t\t\t\t\t\tRequired_R = [t for t, x in enumerate(T_R_C[task_index[z]][:]) if x == 1] # the resource constraint we can only process task if specific resource is available\r\n\t\t\t\t\t\t\t#print( there are constraints on resources: task ', task_index [z] + 1,' requires resource ', Required_R [0] + 1,' to be processed on the WS: ', i + 1)\r\n\t\t\t\t\t\t\tif a2[i*R+Required_R[0]] == 1:\r\n\t\t\t\t\t\t\t\tgood_resource_assignment_reward += 1\r\n\t\t\t\t\t\t\t\t# print('the action assign the resource simultaneously the action VERY GOOD ')\r\n\t\t\t\t\t\t\t\tself.n_start_time_R.append(time)\r\n\t\t\t\t\t\t\t\tself.n_duration_R.append(0.0)    # +1 is given by the release time\r\n\t\t\t\t\t\t\t\tself.n_bay_start_R.append(i)\r\n\t\t\t\t\t\t\t\tself.n_job_id_R.append(str(Required_R[0]+1))\r\n\t\t\t\t\t\t\t\t#a2[i*R+Required_R[0]] = 0\r\n\t\t\t\t\t\t\telse:\r\n\t\t\t\t\t\t\t\tWS_resource[i*R+Required_R[0]] -= 1\r\n\t\t\t\t\t\t\t\tif WS_resource[i*R+Required_R[0]] == 0:\r\n\t\t\t\t\t\t\t\t\tResourcesState[i*R+Required_R[0]]= 0\r\n\t\t\t\t\t\t\t\t\tprint('the resources have run out', Required_R[0]+1,'in the WS ', i+1)\r\n\t\t\t\t\t# print('Task # ', task_index[z]+1 ,'which has a duration of ',Tasks_duration[task_index[z]], ' has been assigned to WS : ',i+1, \" at the following state\", AssignedState)\r\n\t\t#########################################################################################################################################\r\n\t\t\t# Resource assignment to workstations after action a2[]\r\n\r\n\t\t\t\"\"\"\r\n\t\t\tStep3:Resource assignment to  workstation \r\n\t\t\t\"\"\"\r\n\t\t\tfor i in range(W):\r\n\t\t\t\tfor k in range(R):\r\n\t\t\t\t\tif a2[i*R+k]== 1:\r\n\t\t\t\t\t\tif ResourcesState[i*R+k] == 0:\r\n\t\t\t\t\t\t\tWS_resource[i*R+k] += 1\r\n\t\t\t\t\t\t\t# print(\"'the resource', k + 1, 'is assigned to the WS', i + 1\")\r\n\t\t\t\t\t\t\tResourcesState[i*R+k] = 1\r\n\t\t\t\t\t\t\tgood_resource_assignment_reward += 1\r\n\t\t\t\t\t\t\t# print(\"'the resource', k + 1, 'in the WS', i + 1, 'changes from missing to present GOOD\", good_resource_assignment_reward)\r\n\t\t\t\t\t\t\t# Resource assignment to workstation\r\n\t\t\t\t\t\t\tself.n_start_time_R.append(time)\r\n\t\t\t\t\t\t\tself.n_duration_R.append(1)    # +1 is given by the release time\r\n\t\t\t\t\t\t\tself.n_bay_start_R.append(i)   # resource assignment to workstation\r\n\t\t\t\t\t\t\tself.n_job_id_R.append(str(k+1))\r\n\t\t\t\t\t\telse:\r\n\t\t\t\t\t\t\t# WS_resource[i*R+k] += 1\r\n\t\t\t\t\t\t\tbad_resource_assignment_reward -= 1\r\n\t\t\t\t\t\t\t# print('the resources ',k+1,' is assigned to the WS ',i+1,' is bad ')\r\n\t\t\t\t\t\t\tself.n_start_time_R.append(time)\r\n\t\t\t\t\t\t\tself.n_duration_R.append(0.9)    # +1 is given by the release time\r\n\t\t\t\t\t\t\tself.n_bay_start_R.append(i)\r\n\t\t\t\t\t\t\tself.n_job_id_R.append(str(k+1))\r\n\t\t\"\"\"\r\n\t\tmakspane calculation \r\n\t\t\"\"\"\r\n\t\tif unfeasible_resource ==0:\r\n\t\t\tC_increment = 0\r\n\t\t\tC_temp_prec_action = 0\r\n\t\t\tfor i in range(W):\r\n\t\t\t\tC_temp = 0\r\n\t\t\t\tif actions[i] == 0:\r\n\t\t\t\t\tC_temp = 1\r\n\t\t\t\telse:\r\n\t\t\t\t\tC_temp = Tasks_duration[actions[i]-1]+1\r\n\t\t\t\t\t#print(\"maxmum task duaration:\", C_temp)\r\n\t\t\t\tmax_index = np.argmax(WS_busy_duration)\r\n\t\t\t\tif C_temp <= WS_busy_duration[max_index]:\r\n\t\t\t\t\tC_temp = 0\r\n\t\t\t\telse:\r\n\t\t\t\t\tC_temp -= WS_busy_duration[max_index]\r\n\t\t\t\t\tprint(C_temp_prec_action)\r\n\t\t\t\tif C_temp > C_temp_prec_action:\r\n\t\t\t\t\tC_increment = C_temp\r\n\t\t\t\t\tC_temp_prec_action = C_temp\r\n\t\t\tC_max[0] += C_increment\r\n\t\t\t# the value calculated during each time step\r\n\t\t\t#print(\"Cmax =\", C_max[0])\r\n\r\n\t\t# Reward calculation\r\n\r\n\t\ttotal_reward = 0\r\n\t\tif unfeasible_resource==0:\r\n\t\t\tRewardResources = good_resource_assignment_reward\r\n\t\telse:\r\n\t\t\tRewardResources = bad_resource_assignment_reward\r\n\r\n\t\t#RewardResources =  good_resource_assignment_reward + bad_resource_assignment_reward\r\n\r\n\t\tif unfeasible_resource ==0:\r\n\t\t\ttime +=1\r\n\t\tRewardTasks = 0\r\n\t\tif AssignedState[0] - AssignedStateTemp  > 0:\r\n\t\t\tRewardTasks = 0.5 *(AssignedState[0] - AssignedStateTemp)\r\n\t\t\t#RewardTasks = 1\r\n\t\treward = RewardTasks  + RewardResources\r\n\t\tsumWS = 0\r\n\t\tfor i in range(W):\r\n\t\t\tsumWS += WorkstationsState[i]\r\n\r\n\t\tif AssignedState[0] == T and sumWS == 0:\r\n\t\t\tdone = True\r\n\t\t\t#reward = RewardTasks  + RewardResources\r\n\r\n\t\t\treward =  10 * 1 /C_max[0]\r\n\t\telse:\r\n\t\t\tdone = False\r\n\r\n\t\tself.state = np.concatenate([WorkstationsState, TasksState, ResourcesState, AssignedState])\r\n\r\n\t\tself.time = time\r\n\r\n\t\treturn np.array(self.state), reward, done, {}\r\n\r\n\t# Precidence constraint checking\r\n\r\n\tdef check_constraint(self, action_task_j):\r\n\t\t\tW = self.WorkstationsNumber\r\n\t\t\tT = self.TasksNumber\r\n\t\t\tT_P_C = self.T_P_C\r\n\t\t\ta = self.ActionsSet_Task_W1[action_task_j][:]\r\n\t\t\t#print('L AZIONE è : ',a)\r\n\t\t\tTasksState = self.state[W:W+T]\r\n\t\t\tunfeasible_request = 0\r\n\t\t\tlista_task_da_assegnare = [i for i, x in enumerate(TasksState) if x == 0]\r\n\t\t\t#print('lista delle posizioni dei task da asssengare sono : ',lista_task_da_assegnare, '(quindi aggiungi +1 per il Task)')\r\n\t\t\tfor j in range(len(lista_task_da_assegnare)):      #per tutti i task ancora da assegnare\r\n\t\t\t\tif a[lista_task_da_assegnare[j]]==1:      # sta richiedendo il task j = lista_task_da_assegnare[j]\r\n\t\t\t\t\t#print(' la linea di T_P_C considerata è :',T_P_C[lista_task_da_assegnare[j]])\r\n\t\t\t\t\ttask_constraint = [i for i, x in enumerate(T_P_C[lista_task_da_assegnare[j]]) if x == -1]  # task_constraint contiene le postazioni in cui T_R_C alla linea del task assegnato è -1\r\n\t\t\t\t\t#print('sta richiedendo il task',lista_task_da_assegnare[j]+1,' task_constraint : ',task_constraint)\r\n\t\t\t\t\tfor t in range(len(task_constraint)):\r\n\t\t\t\t\t\t#print('verifico se l assegnazione del task', lista_task_da_assegnare[j]+1 ,' genera conflitti con la constraint di precedenza con il task',task_constraint[t]+1)\r\n\t\t\t\t\t\t#print(' ------->',task_constraint[t]+1)\r\n\t\t\t\t\t\tif TasksState[task_constraint[t]] == 0 or self.workstation_processing_task[0]==(task_constraint[t]+1) or self.workstation_processing_task[1]==(task_constraint[t]+1): # <--- se è in processamento (stato task è passato ad 1)\r\n\t\t\t\t\t\t\t#print('unfeasible !!  Task ',lista_task_da_assegnare[j]+1,' can not be requested before the task ',task_constraint[t]+1,'is processed')\r\n\t\t\t\t\t\t\tunfeasible_request = 1\r\n\t\t\t\t\t\t\tbreak\r\n\t\t\t\t\tif unfeasible_request ==1:\r\n\t\t\t\t\t\tbreak\r\n\t\t\treturn unfeasible_request\r\n\r\n\t\"\"\"\r\n\tReset function of Reinforcement Learning part after end of each episode.\r\n\t\"\"\"\r\n\r\n\tdef reset(self):\r\n\t\tself.state = np.zeros(self.WorkstationsNumber + self.TasksNumber+self.WorkstationsNumber*self.ResourcesNumber+1)\r\n\t\treturn np.array(self.state)\r\n\r\n\tdef reset_variable(self):\r\n\t\tself.WS_busy_duration = np.zeros(self.WorkstationsNumber)\r\n\t\tself.WS_resource =np.zeros(self.WorkstationsNumber*self.ResourcesNumber)\r\n\t\tself.total_Tasks_duration = np.array([sum(self.Tasks_duration[:self.TasksNumber])])\r\n\t\tself.time = self.time_init\r\n\t\tself.C_max = np.zeros(1)\r\n\t\tself.n_start_time = []\r\n\t\tself.n_duration = []\r\n\t\tself.n_bay_start = []\r\n\t\tself.n_job_id = []\r\n\t\tself.n_start_time_R = []\r\n\t\tself.n_duration_R = []\r\n\t\tself.n_bay_start_R = []\r\n\t\tself.n_job_id_R = []\r\n\r\n##################### Comment section #################\r\n\r\n\t\"\"\"\r\n\t\tunfeasible_resource = 0\r\n\t\tfor i in range(W):\r\n\t\t\tfor j in range(T):\r\n\t\t\t\tif a1[i*T+j] == 1: # if i assign task j to the WS i are there the resources?\r\n\t\t\t\t\tRequired_R = [i for i, x in enumerate(T_R_C[j][:]) if x == 1]\r\n\t\t\t\t\tif ResourcesState[i*R+Required_R[0]]== 0 and a2[i*R+Required_R[0]]==0:\r\n\t\t\t\t\t\tunfeasible_resource = 1\r\n\t\t\t\t\t\tbreak\r\n\t\t\t\t\t\t\r\n\t\t\t\t\t\t\r\n# total reward assigned to agent during task and resources assignment and resources after relese of the resources.\r\n\t\t#Reward calculation section\r\n\t\t# Resource assignment\r\n\t\t#print('bad resource assignment is ', bad_resource_assignment_reward)\t\t\t\t\t\t\r\n\t\"\"\"\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Environment.py b/Environment.py
+--- a/Environment.py	(revision 8924e302c31415e5f56bdcedea1f52bbb48d3b22)
++++ b/Environment.py	(date 1655380785885)
+@@ -1,16 +1,16 @@
+ import gym
+ import numpy as np
+ from gym import spaces
+-from Action_assignment import ActionsSet_Task, ActionsSet_Resource
++from Task_Res_Action_assignment import Action_assignment, Resource_assignmnet_action
+ class Assembly_line_Env(gym.Env):
+ 	def __init__(self):
+ 		self.WorkstationsNumber = 2
+ 		self.TasksNumber = 15
+ 		self.ResourcesNumber = 3
+-		self.ActionsSet_Task_W1 = ActionsSet_Task(self.TasksNumber)
+-		self.ActionsSet_Resource_W1 = ActionsSet_Resource(self.ResourcesNumber)
+-		self.ActionsSet_Task_W2 = ActionsSet_Task(self.TasksNumber)
+-		self.ActionsSet_Resource_W2 = ActionsSet_Resource(self.ResourcesNumber)
++		self.ActionsSet_Task_W1 = Action_assignment(self.TasksNumber)
++		self.ActionsSet_Resource_W1 = Resource_assignmnet_action(self.ResourcesNumber)
++		self.ActionsSet_Task_W2 = Action_assignment(self.TasksNumber)
++		self.ActionsSet_Resource_W2 = Resource_assignmnet_action(self.ResourcesNumber)
+ 		high = np.full(self.WorkstationsNumber + self.TasksNumber + self.WorkstationsNumber*self.ResourcesNumber+1, np.finfo(np.float32).max)
+ 
+ 		# Number of actions in our environment
+@@ -49,6 +49,7 @@
+ 		self.C_max = np.zeros(1)
+ 		self.workstation_processing_task = np.zeros(self.WorkstationsNumber)
+ 		# workstation status checking
++
+ 	def twin_check(self, action_task_WS1, action_task_WS2):
+ 		twin = 0
+ 		if action_task_WS1 > 0:
+@@ -56,9 +57,6 @@
+ 				#print("work_station_1 and 2 requesting same task")
+ 				twin = 1
+ 		return twin
+-	def observation(self):
+-		pass
+-		return
+ 
+ 	def step(self, action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2):
+ 		"""
+@@ -198,12 +196,12 @@
+ 								self.n_duration_R.append(0.0)    # +1 is given by the release time
+ 								self.n_bay_start_R.append(i)
+ 								self.n_job_id_R.append(str(Required_R[0]+1))
+-								#a2[i*R+Required_R[0]] = 0
++								a2[i*R+Required_R[0]] = 0
+ 							else:
+ 								WS_resource[i*R+Required_R[0]] -= 1
+ 								if WS_resource[i*R+Required_R[0]] == 0:
+ 									ResourcesState[i*R+Required_R[0]]= 0
+-									print('the resources have run out', Required_R[0]+1,'in the WS ', i+1)
++									#print('the resources have run out', Required_R[0]+1,'in the WS ', i+1)
+ 					# print('Task # ', task_index[z]+1 ,'which has a duration of ',Tasks_duration[task_index[z]], ' has been assigned to WS : ',i+1, " at the following state", AssignedState)
+ 		#########################################################################################################################################
+ 			# Resource assignment to workstations after action a2[]
+Index: P_2_RL.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch\r\nimport random\r\nimport numpy as np\r\nfrom collections import deque\r\nimport torch.optim as optim\r\nfrom torch.autograd import Variable\r\nfrom Deep_Learning_Part import DQN\r\nimport torch.nn.functional as F\r\nfrom environment_copy import Assembly_line_Env\r\n\r\nenv = Assembly_line_Env()\r\nstate_size = env.observation_space.shape[0]\r\naction_size_task = env.ActionSpace_task_number.n\r\naction_size_resource = env.ActionSpace_resource_number.n\r\n\r\n\"\"\"\r\nReinforcement Learning Part (RL)\r\nMain agent class \r\nworking of DQN agent and why we need target network: \r\nour target class is dynamic, like in simple machine learning we have static class we need to learn but \r\nIn RL observation changes,  after each action, we need target model to save Theta values  and we replace during next itteration \r\nor we can decide according to our need.\r\n\"\"\"\r\n\r\nclass DQNAgent():\r\n    def __init__(self, state_size, action_size):\r\n\r\n        \"\"\"\r\n        Agnet parameter\r\n        deque: is double ended data structure for storing and removing the data here we use to create the memory of agent\r\n        :param state_size:\r\n        :param action_size:\r\n        below arguments need to be check\r\n        self.load_model = False\r\n        self.epsilon_min = 0.01\r\n        self.explore_step = 80000\r\n        self.epsilon_decay = (self.epsilon - self.epsilon_min) / self.explore_step\r\n        memory_size = 2000\r\n        batch_size = 256\r\n        \"\"\"\r\n\r\n        self.state_size = state_size\r\n        self.action_size = action_size\r\n        self.discount_factor = 0.9\r\n        self.learning_rate = 0.001\r\n        self.memory_size = 2000\r\n        self.epsilon = 1.0\r\n        self.batch_size = 64\r\n        self.train_start = 1000\r\n\r\n        \"\"\"\r\n        RL_Agent memory creation by deque data structure \r\n        NN model for agent\r\n        weight function for NN to find the optimal values to reduce the error\r\n        target model to check the difference between prediction and actual target \r\n        \r\n        Questions: What is input of NN\r\n                   which policy agent following \r\n                   what is  action \r\n        \"\"\"\r\n\r\n        self.memory = deque(maxlen=self.memory_size)\r\n        self.model = DQN(state_size, action_size)\r\n        self.model.apply(self.weights_init)\r\n\r\n        \"\"\"\r\n        target model\r\n        \"\"\"\r\n\r\n        self.target_model = DQN(state_size, action_size)\r\n        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)\r\n        self.update_target_model()\r\n\r\n        \"\"\"\r\n        FUnctions: \r\n        1) weight initialization\r\n        2) masked actions\r\n        3) action_selection for resources \r\n        4) target_model_update for stablizing the training \r\n        5) memory creation function for agent \r\n        \"\"\"\r\n    #-----------------------------------------Function------------------------------------------------------------#\r\n\r\n    def weights_init(self, m):\r\n        classname = m.__class__.__name__\r\n        if classname.find('Linear') != -1:\r\n            torch.nn.init.xavier_uniform_(m.weight)\r\n\r\n    def get_action(self, state,  epsilon_custom):\r\n\r\n        if np.random.rand() <= epsilon_custom:\r\n            return random.randrange(self.action_size)\r\n        else:\r\n            state = torch.from_numpy(state)\r\n            state = Variable(state).float().cpu()\r\n            q_value = self.model(state)\r\n            _, action = torch.max(q_value, 1)\r\n            return int(action)\r\n    #------------------------------------------------------------------------------------------------------#\r\n\r\n    \"\"\"      \r\n        In below function we are performing DL part calculating q_values:\r\n        by these q values using policy we proposing available actions\r\n        then checking pre constraint before executing in environment.\r\n        name of function is not okay we need to change\r\n        mask_free position: mean we have following avalable task for execution\r\n    \"\"\"\r\n\r\n    def get_action_mask(self, state, TasksState_mask, null_act, epsilon_custom):\r\n        rand_action = 0\r\n        mask = np.concatenate([null_act, TasksState_mask])\r\n        mask_free_position = [i for i, x in enumerate(mask) if x == 0]\r\n        state = np.reshape(state, [1, state_size])\r\n        state = torch.from_numpy(state)\r\n        state = Variable(state).float().cpu()\r\n        pred = self.model(state) # model call the forward function to get the prediction DL part\r\n        pred_array = pred.detach().cpu().numpy()\r\n        calculated_q_value = [] # list\r\n        for i in range(len(mask_free_position)):\r\n            calculated_q_value.append(pred_array[0][mask_free_position[i]])\r\n        if np.random.rand() <= epsilon_custom:\r\n            action = mask_free_position[random.randint(0,len(mask_free_position)-1)]\r\n            rand_action = 1\r\n        else:\r\n            max_index = np.argmax(calculated_q_value)\r\n            action = mask_free_position[max_index]\r\n\r\n        \"\"\"\r\n        if rand_action==1:\r\n            print(\"random action is selected by get_action_masked:\", action)\r\n        else:\r\n            print(\"maxi_q values action selected by get_Action_masked:\", action)\r\n        \"\"\"\r\n\r\n        return action , rand_action\r\n\r\n    #------------------------------------------------------------------------------------------#\r\n\r\n    \"\"\"\r\n    In this function we check the pre constraint and wrorkstation status\r\n    # constraint checking\r\n    # print(\"first we select the action by get_action_masked:\", action_task_WS) # the number of action\r\n    # print(\"Second we check the pred constraint by calling the constraint function:\" )\r\n    #print(' action proposed by agent is: ',action_task_WS,'which is  unfeasible and  masked to the next iteration                                                             CHANGEEEE')\r\n    #print(\"the mask is \",mask_temp,' task_state :',Tasks_State_mask, \"list of masked_task state:\", list_masked_task)\r\n    #print(\"total number pf unfeasible actions are:\", num_unfeasible_taken_action)\r\n    \"\"\"\r\n\r\n    # -----------------------------------------------------------------------------------------#\r\n\r\n    def get_action_mask_feasible(self, state, env, Tasks_State_mask, work_state, null_act, epsilon_custom):\r\n        list_masked_task = []\r\n        num_unfeasible_taken_action = 0\r\n        mask_temp = Tasks_State_mask\r\n        action_task_WS = 0\r\n        if work_state ==1:\r\n            action_task_WS = 0\r\n        else:\r\n            action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)\r\n\r\n            unfeasible_flag = 1\r\n            while(unfeasible_flag == 1):\r\n                action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)\r\n                unfeasible_flag = env.check_constraint(action_task_WS)\r\n                if unfeasible_flag ==1:\r\n                    mask_temp[action_task_WS-1]= 1\r\n                    list_masked_task.append(action_task_WS-1) # indx of action\r\n                    num_unfeasible_taken_action += 1\r\n        return action_task_WS, list_masked_task\r\n\r\n    # ---------------------------------------------------------------------------------------------#\r\n    def update_target_model(self):\r\n        self.target_model.load_state_dict(self.model.state_dict())\r\n\r\n    # -----------------------------------------------------------------------------------------#\r\n    def append_sample(self, state, action, reward, next_state, done):\r\n        self.memory.append((state, action, reward, next_state, done))\r\n\r\n    \"\"\"\r\n    output layer of NN action selection by following some policy \r\n    if value of epslon is greater or = then the random number chose that action  (explore )\r\n    otherwise choose greedy action (exploit)\r\n    \"\"\"\r\n\r\n    \"\"\"\r\n    After memory creation agent take data from his memory to train and perform action\r\n    \"\"\"\r\n\r\n    def train_model(self):\r\n        mini_batch = random.sample(self.memory, self.batch_size)\r\n        mini_batch = np.array(mini_batch).transpose()\r\n\r\n        \"\"\"\r\n        step function (output)\r\n        \"\"\"\r\n\r\n        states = np.vstack(mini_batch[0])\r\n        actions = list(mini_batch[1])\r\n        rewards = list(mini_batch[2])\r\n        next_states = np.vstack(mini_batch[3])\r\n        dones = mini_batch[4]\r\n        dones = dones.astype(int)\r\n\r\n        \"\"\"\r\n        variable prepration: \r\n        for storage of state, prediction and action variable.\r\n        current q values \r\n        \"\"\"\r\n\r\n        states = torch.Tensor(states)\r\n        states = Variable(states).float()\r\n        pred = self.model(states)\r\n        a = torch.LongTensor(actions).view(-1, 1)\r\n        one_hot_action = torch.FloatTensor(self.batch_size, self.action_size).zero_()\r\n        one_hot_action.scatter_(1, a, 1)\r\n        pred = torch.sum(pred.mul(Variable(one_hot_action)), dim=1)\r\n\r\n        \"\"\"\r\n        Next state variable for storage \r\n        target q values \r\n        loss function application\r\n        optimizer application \r\n      \r\n       \r\n        Learning part start here\r\n        \"\"\"\r\n\r\n        next_states = torch.Tensor(next_states)\r\n        next_states = Variable(next_states).float()\r\n        next_pred = self.target_model(next_states).data\r\n        rewards = torch.FloatTensor(rewards)\r\n        dones = torch.FloatTensor(dones)\r\n        target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]\r\n        target = Variable(target)\r\n        self.optimizer.zero_grad()\r\n        loss = F.mse_loss(pred,target)\r\n        loss.backward()\r\n        self.optimizer.step()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/P_2_RL.py b/P_2_RL.py
+--- a/P_2_RL.py	(revision 8924e302c31415e5f56bdcedea1f52bbb48d3b22)
++++ b/P_2_RL.py	(date 1655381459955)
+@@ -4,9 +4,11 @@
+ from collections import deque
+ import torch.optim as optim
+ from torch.autograd import Variable
+-from Deep_Learning_Part import DQN
++from P_1_DL import DQN
+ import torch.nn.functional as F
+-from environment_copy import Assembly_line_Env
++from Environment import Assembly_line_Env
++
++#from All_functions import append_sample, update_target_model, weights_init
+ 
+ env = Assembly_line_Env()
+ state_size = env.observation_space.shape[0]
+@@ -37,7 +39,15 @@
+         self.epsilon_decay = (self.epsilon - self.epsilon_min) / self.explore_step
+         memory_size = 2000
+         batch_size = 256
++
++        FUnctions:
++        1) weight initialization
++        2) masked actions
++        3) action_selection for resources
++        4) target_model_update for stablizing the training
++        5) memory creation function for agent
+         """
++
+ 
+         self.state_size = state_size
+         self.action_size = action_size
+@@ -48,46 +58,37 @@
+         self.batch_size = 64
+         self.train_start = 1000
+ 
+-        """
+-        RL_Agent memory creation by deque data structure 
+-        NN model for agent
+-        weight function for NN to find the optimal values to reduce the error
+-        target model to check the difference between prediction and actual target 
+-        
+-        Questions: What is input of NN
+-                   which policy agent following 
+-                   what is  action 
+-        """
+-
+-        self.memory = deque(maxlen=self.memory_size)
++    # step_1: Network creation
++    # main network (critic)
+         self.model = DQN(state_size, action_size)
++
+         self.model.apply(self.weights_init)
+ 
+-        """
+-        target model
+-        """
+ 
++    # target network/ evaluation of performance and training
+         self.target_model = DQN(state_size, action_size)
++
++    # memory initialization and storage
++        self.memory = deque(maxlen=self.memory_size)
++    # memory storage
++
++    def append_sample (self, state, action, reward, next_state, done):
++        self.memory.append((state, action, reward, next_state, done))
++
++    # target nn updating after number of time step
++    def update_target_model(self):
++        self.target_model.load_state_dict(self.model.state_dict())
++
+         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
++
+         self.update_target_model()
+ 
+-        """
+-        FUnctions: 
+-        1) weight initialization
+-        2) masked actions
+-        3) action_selection for resources 
+-        4) target_model_update for stablizing the training 
+-        5) memory creation function for agent 
+-        """
+-    #-----------------------------------------Function------------------------------------------------------------#
+-
+     def weights_init(self, m):
+         classname = m.__class__.__name__
+         if classname.find('Linear') != -1:
+             torch.nn.init.xavier_uniform_(m.weight)
+ 
+     def get_action(self, state,  epsilon_custom):
+-
+         if np.random.rand() <= epsilon_custom:
+             return random.randrange(self.action_size)
+         else:
+@@ -96,15 +97,6 @@
+             q_value = self.model(state)
+             _, action = torch.max(q_value, 1)
+             return int(action)
+-    #------------------------------------------------------------------------------------------------------#
+-
+-    """      
+-        In below function we are performing DL part calculating q_values:
+-        by these q values using policy we proposing available actions
+-        then checking pre constraint before executing in environment.
+-        name of function is not okay we need to change
+-        mask_free position: mean we have following avalable task for execution
+-    """
+ 
+     def get_action_mask(self, state, TasksState_mask, null_act, epsilon_custom):
+         rand_action = 0
+@@ -124,29 +116,8 @@
+         else:
+             max_index = np.argmax(calculated_q_value)
+             action = mask_free_position[max_index]
+-
+-        """
+-        if rand_action==1:
+-            print("random action is selected by get_action_masked:", action)
+-        else:
+-            print("maxi_q values action selected by get_Action_masked:", action)
+-        """
+-
+         return action , rand_action
+ 
+-    #------------------------------------------------------------------------------------------#
+-
+-    """
+-    In this function we check the pre constraint and wrorkstation status
+-    # constraint checking
+-    # print("first we select the action by get_action_masked:", action_task_WS) # the number of action
+-    # print("Second we check the pred constraint by calling the constraint function:" )
+-    #print(' action proposed by agent is: ',action_task_WS,'which is  unfeasible and  masked to the next iteration                                                             CHANGEEEE')
+-    #print("the mask is ",mask_temp,' task_state :',Tasks_State_mask, "list of masked_task state:", list_masked_task)
+-    #print("total number pf unfeasible actions are:", num_unfeasible_taken_action)
+-    """
+-
+-    # -----------------------------------------------------------------------------------------#
+ 
+     def get_action_mask_feasible(self, state, env, Tasks_State_mask, work_state, null_act, epsilon_custom):
+         list_masked_task = []
+@@ -157,82 +128,54 @@
+             action_task_WS = 0
+         else:
+             action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)
+-
+             unfeasible_flag = 1
+             while(unfeasible_flag == 1):
+                 action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)
+                 unfeasible_flag = env.check_constraint(action_task_WS)
+                 if unfeasible_flag ==1:
+                     mask_temp[action_task_WS-1]= 1
+-                    list_masked_task.append(action_task_WS-1) # indx of action
++                    list_masked_task.append(action_task_WS-1)
+                     num_unfeasible_taken_action += 1
++                    #print("final action selected:", action_task_WS, "Unfeasible action at following iteration:", num_unfeasible_taken_action, "list of masked task:", list_masked_task)
+         return action_task_WS, list_masked_task
+-
+     # ---------------------------------------------------------------------------------------------#
+-    def update_target_model(self):
+-        self.target_model.load_state_dict(self.model.state_dict())
+-
+-    # -----------------------------------------------------------------------------------------#
+-    def append_sample(self, state, action, reward, next_state, done):
+-        self.memory.append((state, action, reward, next_state, done))
+-
+-    """
+-    output layer of NN action selection by following some policy 
+-    if value of epslon is greater or = then the random number chose that action  (explore )
+-    otherwise choose greedy action (exploit)
+-    """
+-
+-    """
+-    After memory creation agent take data from his memory to train and perform action
+-    """
+ 
+     def train_model(self):
++        # Now real learning start from reply memory buffer
+         mini_batch = random.sample(self.memory, self.batch_size)
+         mini_batch = np.array(mini_batch).transpose()
+ 
+-        """
+-        step function (output)
+-        """
+-
+         states = np.vstack(mini_batch[0])
+         actions = list(mini_batch[1])
+         rewards = list(mini_batch[2])
+         next_states = np.vstack(mini_batch[3])
+         dones = mini_batch[4]
+         dones = dones.astype(int)
+-
+-        """
+-        variable prepration: 
+-        for storage of state, prediction and action variable.
+-        current q values 
+-        """
+-
+         states = torch.Tensor(states)
+         states = Variable(states).float()
+-        pred = self.model(states)
++        pred = self.model(states)       # we are passing states here to critic network for possible prediction
+         a = torch.LongTensor(actions).view(-1, 1)
+         one_hot_action = torch.FloatTensor(self.batch_size, self.action_size).zero_()
+         one_hot_action.scatter_(1, a, 1)
+         pred = torch.sum(pred.mul(Variable(one_hot_action)), dim=1)
+ 
+-        """
+-        Next state variable for storage 
+-        target q values 
+-        loss function application
+-        optimizer application 
+-      
+-       
+-        Learning part start here
+-        """
++        print("we have predict values after performing calculation:", pred)
++
++        # end of current state , we have: reward and next_state as response from environment
++        #
+ 
+         next_states = torch.Tensor(next_states)
+         next_states = Variable(next_states).float()
++        rewards = torch.FloatTensor(rewards)
++        # expected value calculation using evaluation model / target NN
++        # calculation Belman optimality
++
+         next_pred = self.target_model(next_states).data
+-        rewards = torch.FloatTensor(rewards)
++
+         dones = torch.FloatTensor(dones)
+         target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]
+         target = Variable(target)
+         self.optimizer.zero_grad()
+-        loss = F.mse_loss(pred,target)
++        loss = F.mse_loss(pred , target)
+         loss.backward()
+         self.optimizer.step()
+Index: run.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pylab\r\nimport math\r\nimport numpy as np\r\nfrom Deep_Learning_Part import DQN\r\nfrom Rein_Learning_Part import DQNAgent\r\nfrom Render_MultiAgentWS_Mask import Render_MultiAgent\r\nfrom Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent\r\nfrom environment_copy import Assembly_line_Env\r\nfrom numpy import savez_compressed\r\nEPISODES = 5\r\nMax_Steps = 65\r\n\"\"\"\r\nEnvironment initialization\r\nagent initialization (state, action)\r\n...\r\nstorage variables are initialization\r\n\"\"\"\r\nif __name__ == \"__main__\":\r\n    env = Assembly_line_Env()\r\n    state_size = env.observation_space.shape[0]\r\n    print(\"state size :\", state_size)\r\n\r\n    action_size_task = env.ActionSpace_task_number.n\r\n    print(\"action_size:\", action_size_task)\r\n    action_size_resource = env.ActionSpace_resource_number.n\r\n\r\n    #Agent_Task_WS1\r\n    model_Task_WS1 = DQN(state_size, action_size_task)\r\n    agent_Task_WS1 = DQNAgent(state_size, action_size_task)\r\n    #Agent_Resource_WS1\r\n    model_Resource_WS1 = DQN(state_size, action_size_resource)\r\n    agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)\r\n\r\n\r\n    #Agent_Task_WS2\r\n    model_Task_WS2 = DQN(state_size, action_size_task)\r\n    agent_Task_WS2 = DQNAgent(state_size, action_size_task)\r\n\r\n    #Agent_Resource_WS2\r\n    model_Resource_WS2 = DQN(state_size, action_size_resource)\r\n    agent_Resource_WS2 = DQNAgent(state_size, action_size_resource)\r\n\r\n    scores, episodes, scores_1, episodes_1, results = [], [], [], [], []\r\n    start_superlist, duration_superlist, machine_superlist,job_id_superlist = [],[],[],[]\r\n    start_superlist_R, duration_superlist_R, machine_superlist_R,job_id_superlist_R = [],[],[],[]\r\n    step_list, epsilon_list = [], []\r\n\r\n    \"\"\"\r\n    RL Agent loop\r\n    \"\"\"\r\n    for e in range(EPISODES):   # for each episode\r\n        step = 0\r\n        done = False\r\n        score = 0\r\n        alpha = 0.13\r\n        epsilon_custom =math.exp(-e/(alpha*EPISODES))\r\n        #epsilon_custom=0.9\r\n        state = env.reset()\r\n        env.reset_variable()\r\n        state = np.reshape(state, [1, state_size])\r\n        while not done:\r\n            iteration = 0\r\n            null_act = [0]\r\n            tasks_state_mask = env.state[env.WorkstationsNumber:env.WorkstationsNumber+env.TasksNumber]\r\n            work_state = env.state[:env.WorkstationsNumber]\r\n            \"\"\"\r\n            function calling start from here:\r\n            Resource assignment\r\n            Task assignment \r\n            \"\"\"\r\n            action_resource_WS1 = agent_Resource_WS1.get_action(state,epsilon_custom)\r\n            action_resource_WS2 = agent_Resource_WS2.get_action(state,epsilon_custom)\r\n\r\n            action_task_WS1, list_masked_task = agent_Task_WS1.get_action_mask_feasible(state, env, tasks_state_mask, work_state[0], null_act, epsilon_custom)\r\n            action_task_WS2, list_masked_task = agent_Task_WS2.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon_custom)\r\n\r\n\r\n            \"\"\"\r\n            Double check if all constraints are satisfied and we have only feasible action, last check for final action\r\n            \"\"\"\r\n\r\n            check_twin = env.twin_check(action_task_WS1, action_task_WS2)\r\n            if check_twin==1:\r\n                action_temp = action_task_WS1\r\n                tasks_state_mask[action_task_WS1-1] = 1\r\n                action_task_WS2, random_action = agent_Task_WS2.get_action_mask(state,tasks_state_mask,null_act,epsilon_custom)\r\n                tasks_state_mask[action_temp-1] = 0\r\n\r\n            \"\"\"\r\n            print(\"Workstation state:\", work_state)\r\n            print(\"Action selected by w_1 and W_:\", action_task_WS1, action_task_WS2)\r\n            \"\"\"\r\n            #################################################################################################################\r\n            # print(\"Step #:\", step, \" of episode\", e)\r\n            #print(\"Final action selected for step :\\n\", \"action 1:\" ,action_task_WS1, \"\\n\" , \"action 2:\", action_task_WS2)\r\n            next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)\r\n            next_state = np.reshape(next_state, [1, state_size])\r\n\r\n            \"\"\"\r\n            Memory creation\r\n            \"\"\"\r\n\r\n            agent_Task_WS1.append_sample(state, action_task_WS1, reward, next_state, done)\r\n            agent_Resource_WS1.append_sample(state, action_resource_WS1, reward, next_state, done)\r\n            agent_Task_WS2.append_sample(state, action_task_WS2, reward, next_state, done)\r\n            agent_Resource_WS2.append_sample(state, action_resource_WS2, reward, next_state, done)\r\n\r\n            if len(agent_Task_WS1.memory) >= agent_Task_WS1.train_start:\r\n                agent_Task_WS1.train_model()\r\n                agent_Resource_WS1.train_model()\r\n                agent_Task_WS2.train_model()\r\n                agent_Resource_WS2.train_model()\r\n\r\n            score += reward\r\n            state = next_state\r\n            step +=1\r\n\r\n            \"\"\"\r\n            Stopping criteria: in each episode  \r\n            \"\"\"\r\n\r\n            if step == Max_Steps:\r\n                agent_Task_WS1.update_target_model()\r\n                agent_Resource_WS1.update_target_model()\r\n                agent_Task_WS2.update_target_model()\r\n                agent_Resource_WS2.update_target_model()\r\n                result = [score,e,step]\r\n                scores.append(score)\r\n                episodes.append(e)\r\n                scores_1.append(score)\r\n                episodes_1.append(e)\r\n                results.append(result)\r\n                step_list.append(step)\r\n                epsilon_list.append(epsilon_custom)\r\n\r\n                start_superlist.append(env.n_start_time)\r\n                duration_superlist.append(env.n_duration)\r\n                machine_superlist.append(env.n_bay_start)\r\n                job_id_superlist.append(env.n_job_id)\r\n                start_superlist_R.append(env.n_start_time_R)\r\n                duration_superlist_R.append(env.n_duration_R)\r\n                machine_superlist_R.append(env.n_bay_start_R)\r\n                job_id_superlist_R.append(env.n_job_id_R)\r\n\r\n                # print(\"Current episode:\", e, \"  score:\", score, \"  memory length:\",len(agent_Task_WS1.memory), \" epsilon:\", epsilon_custom)\r\n                break\r\n            # after each episode i am updating the model\r\n            if done:\r\n                agent_Task_WS1.update_target_model()\r\n                agent_Task_WS2.update_target_model()\r\n                agent_Resource_WS1.update_target_model()\r\n                agent_Resource_WS2.update_target_model()\r\n\r\n                start_superlist.append(env.n_start_time)\r\n                duration_superlist.append(env.n_duration)\r\n                machine_superlist.append(env.n_bay_start)\r\n                job_id_superlist.append(env.n_job_id)\r\n                start_superlist_R.append(env.n_start_time_R)\r\n                duration_superlist_R.append(env.n_duration_R)\r\n                machine_superlist_R.append(env.n_bay_start_R)\r\n                job_id_superlist_R.append(env.n_job_id_R)\r\n\r\n                result = [score,e,step]\r\n                scores.append(score)\r\n                episodes.append(e)\r\n                results.append(result)\r\n                scores_1.append(score)\r\n                episodes_1.append(e)\r\n                step_list.append(step)\r\n                epsilon_list.append(epsilon_custom)\r\n\r\n    max_index_col = np.argmax(scores)\r\n    print(\"Best Result\", max_index_col, \"Reward\", scores[max_index_col], \"Makspane\", step_list[max_index_col])\r\n    print(\"Initial starting point of each task start_superlist[max_index_col]\", start_superlist[max_index_col])\r\n    print(\" Busy duration of workstation  duration_superlist[max_index_col]\", duration_superlist[max_index_col])\r\n    print(\" Workstation Ids  machine_superlist[max_index_col]) \", machine_superlist[max_index_col])\r\n    print(\"Task Ids job_id_superlist[max_index_col]\", job_id_superlist[max_index_col])\r\n\r\n    pylab.figure(1)\r\n    pylab.plot(episodes, scores, 'b', linewidth=0.1, markersize=1)\r\n    #pylab.figure(2)\r\n    #pylab.plot(episodes, step_list, 'r', linewidth=0.1, markersize=1)\r\n    pylab.figure(3)\r\n    pylab.plot(episodes, epsilon_list, 'g', linewidth=1, markersize=1)\r\n    \"\"\"\r\n    Render_MultiAgent(start_superlist[max_index_col], duration_superlist[max_index_col], machine_superlist[max_index_col], job_id_superlist[max_index_col])\r\n    \r\n    Render_Res_MultiAgent(start_superlist_R[max_index_col],duration_superlist_R[max_index_col], machine_superlist_R[max_index_col], job_id_superlist_R[max_index_col])\r\n    \"\"\"\r\n    pylab.show()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/run.py b/run.py
+--- a/run.py	(revision 8924e302c31415e5f56bdcedea1f52bbb48d3b22)
++++ b/run.py	(date 1655381538257)
+@@ -1,20 +1,22 @@
+ import pylab
+ import math
+ import numpy as np
+-from Deep_Learning_Part import DQN
+-from Rein_Learning_Part import DQNAgent
++from P_1_DL import DQN
++from P_2_RL import DQNAgent
+ from Render_MultiAgentWS_Mask import Render_MultiAgent
+ from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
+-from environment_copy import Assembly_line_Env
++from Environment import Assembly_line_Env
+ from numpy import savez_compressed
+-EPISODES = 5
++EPISODES = 50
+ Max_Steps = 65
++
+ """
+ Environment initialization
+ agent initialization (state, action)
+ ...
+ storage variables are initialization
+ """
++
+ if __name__ == "__main__":
+     env = Assembly_line_Env()
+     state_size = env.observation_space.shape[0]
+@@ -31,7 +33,6 @@
+     model_Resource_WS1 = DQN(state_size, action_size_resource)
+     agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)
+ 
+-
+     #Agent_Task_WS2
+     model_Task_WS2 = DQN(state_size, action_size_task)
+     agent_Task_WS2 = DQNAgent(state_size, action_size_task)
+@@ -46,39 +47,30 @@
+     step_list, epsilon_list = [], []
+ 
+     """
+-    RL Agent loop
++    DQN training agent 
+     """
+     for e in range(EPISODES):   # for each episode
+         step = 0
+         done = False
+         score = 0
+         alpha = 0.13
+-        epsilon_custom =math.exp(-e/(alpha*EPISODES))
+-        #epsilon_custom=0.9
++        #epsilon_custom =math.exp(-e/(alpha*EPISODES))
++        epsilon_custom=0.9
+         state = env.reset()
+         env.reset_variable()
+         state = np.reshape(state, [1, state_size])
++        # second loop of DQN agent training
+         while not done:
+             iteration = 0
+             null_act = [0]
+             tasks_state_mask = env.state[env.WorkstationsNumber:env.WorkstationsNumber+env.TasksNumber]
+             work_state = env.state[:env.WorkstationsNumber]
+-            """
+-            function calling start from here:
+-            Resource assignment
+-            Task assignment 
+-            """
+             action_resource_WS1 = agent_Resource_WS1.get_action(state,epsilon_custom)
+             action_resource_WS2 = agent_Resource_WS2.get_action(state,epsilon_custom)
+ 
+             action_task_WS1, list_masked_task = agent_Task_WS1.get_action_mask_feasible(state, env, tasks_state_mask, work_state[0], null_act, epsilon_custom)
+             action_task_WS2, list_masked_task = agent_Task_WS2.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon_custom)
+ 
+-
+-            """
+-            Double check if all constraints are satisfied and we have only feasible action, last check for final action
+-            """
+-
+             check_twin = env.twin_check(action_task_WS1, action_task_WS2)
+             if check_twin==1:
+                 action_temp = action_task_WS1
+@@ -86,20 +78,13 @@
+                 action_task_WS2, random_action = agent_Task_WS2.get_action_mask(state,tasks_state_mask,null_act,epsilon_custom)
+                 tasks_state_mask[action_temp-1] = 0
+ 
+-            """
+-            print("Workstation state:", work_state)
+-            print("Action selected by w_1 and W_:", action_task_WS1, action_task_WS2)
+-            """
++
+             #################################################################################################################
+-            # print("Step #:", step, " of episode", e)
++            print("Step #:", step, " of episode", e)
+             #print("Final action selected for step :\n", "action 1:" ,action_task_WS1, "\n" , "action 2:", action_task_WS2)
+             next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)
+             next_state = np.reshape(next_state, [1, state_size])
+ 
+-            """
+-            Memory creation
+-            """
+-
+             agent_Task_WS1.append_sample(state, action_task_WS1, reward, next_state, done)
+             agent_Resource_WS1.append_sample(state, action_resource_WS1, reward, next_state, done)
+             agent_Task_WS2.append_sample(state, action_task_WS2, reward, next_state, done)
+@@ -115,10 +100,6 @@
+             state = next_state
+             step +=1
+ 
+-            """
+-            Stopping criteria: in each episode  
+-            """
+-
+             if step == Max_Steps:
+                 agent_Task_WS1.update_target_model()
+                 agent_Resource_WS1.update_target_model()
+@@ -143,7 +124,7 @@
+                 job_id_superlist_R.append(env.n_job_id_R)
+ 
+                 # print("Current episode:", e, "  score:", score, "  memory length:",len(agent_Task_WS1.memory), " epsilon:", epsilon_custom)
+-                break
++
+             # after each episode i am updating the model
+             if done:
+                 agent_Task_WS1.update_target_model()
+Index: Task_Res_Action_assignment.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#             cd Documents/ScriptPython\r\n#             python ActionsSet_MultiAgentWS.py\r\nimport numpy as np\r\nimport random\r\n\r\ndef task_assignment_action(T):\r\n    k = T\r\n    job_assignment_action = []\r\n    null_action = np.zeros(k)\r\n    Identity = np.identity(k)\r\n    job_assignment_action.append(null_action)\r\n    for i in range(k):\r\n        job_assignment_action.append(Identity[i][:])\r\n    return job_assignment_action\r\n\r\ndef Resource_assignmnet_action(R):\r\n    t = R\r\n    Resource_assignment = []\r\n    null_action = np.zeros(t)\r\n    Identity = np.identity(t)\r\n    Resource_assignment.append(null_action)\r\n    for i in range(t):\r\n        Resource_assignment.append(Identity[i][:])\r\n    return Resource_assignment\r\n\r\ndef Task_Resource_constraint_generator(R,T):\r\n    Identity = np.identity(R)\r\n    T_R_C = []\r\n    for i in range(T):\r\n        T_R_C.append(Identity[random.randint(0,R-1)][:])\r\n    #print('TRC :',T_R_C)\r\n    return T_R_C\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Task_Res_Action_assignment.py b/Task_Res_Action_assignment.py
+--- a/Task_Res_Action_assignment.py	(revision 8924e302c31415e5f56bdcedea1f52bbb48d3b22)
++++ b/Task_Res_Action_assignment.py	(date 1655372897410)
+@@ -3,7 +3,7 @@
+ import numpy as np
+ import random
+ 
+-def task_assignment_action(T):
++def Action_assignment(T):
+     k = T
+     job_assignment_action = []
+     null_action = np.zeros(k)
