@@ -51,8 +51,8 @@ if __name__ == "__main__":
         done = False
         score = 0
         alpha = 0.13
-        #epsilon_custom =math.exp(-e/(alpha*EPISODES))
-        epsilon_custom=0.9
+        epsilon_custom =math.exp(-e/(alpha*EPISODES))
+        #epsilon_custom=0.9
         state = env.reset()
         env.reset_variable()
         state = np.reshape(state, [1, state_size])
@@ -75,8 +75,6 @@ if __name__ == "__main__":
                 action_task_WS2, random_action = agent_Task_WS2.get_action_mask(state,tasks_state_mask,null_act,epsilon_custom)
                 tasks_state_mask[action_temp-1] = 0
 
-
-            #################################################################################################################
             print("Step #:", step, " of episode", e)
             #print("Final action selected for step :\n", "action 1:" ,action_task_WS1, "\n" , "action 2:", action_task_WS2)
             next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)
@@ -156,13 +154,13 @@ if __name__ == "__main__":
 
     pylab.figure(1)
     pylab.plot(episodes, scores, 'b', linewidth=0.1, markersize=1)
-    #pylab.figure(2)
-    #pylab.plot(episodes, step_list, 'r', linewidth=0.1, markersize=1)
+    pylab.figure(2)
+    pylab.plot(episodes, step_list, 'r', linewidth=0.1, markersize=1)
     pylab.figure(3)
     pylab.plot(episodes, epsilon_list, 'g', linewidth=1, markersize=1)
-    """
+
     Render_MultiAgent(start_superlist[max_index_col], duration_superlist[max_index_col], machine_superlist[max_index_col], job_id_superlist[max_index_col])
     
     Render_Res_MultiAgent(start_superlist_R[max_index_col],duration_superlist_R[max_index_col], machine_superlist_R[max_index_col], job_id_superlist_R[max_index_col])
-    """
+
     pylab.show()
