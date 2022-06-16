@@ -1,8 +1,8 @@
 import pylab
 import math
 import numpy as np
-from  import DQN
-from P_2_RL import DQNAgent
+from Deep_Learning_Part import DQN
+from Rein_Learning_Part import DQNAgent
 from Render_MultiAgentWS_Mask import Render_MultiAgent
 from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
 from Environment import Assembly_line_Env
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                 job_id_superlist_R.append(env.n_job_id_R)
 
                 # print("Current episode:", e, "  score:", score, "  memory length:",len(agent_Task_WS1.memory), " epsilon:", epsilon_custom)
-
+                break
             # after each episode i am updating the model
             if done:
                 agent_Task_WS1.update_target_model()

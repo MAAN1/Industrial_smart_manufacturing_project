@@ -193,7 +193,7 @@ class Assembly_line_Env(gym.Env):
 								good_resource_assignment_reward += 1
 								# print('the action assign the resource simultaneously the action VERY GOOD ')
 								self.n_start_time_R.append(time)
-								self.n_duration_R.append(0.0)    # +1 is given by the release time
+								self.n_duration_R.append(0.9)    # +1 is given by the release time
 								self.n_bay_start_R.append(i)
 								self.n_job_id_R.append(str(Required_R[0]+1))
 								a2[i*R+Required_R[0]] = 0
