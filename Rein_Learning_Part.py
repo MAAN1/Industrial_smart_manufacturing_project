@@ -103,11 +103,11 @@ class DQNAgent():
                     num_unfeasible_taken_action += 1
         return action_task_WS, list_masked_task
 
-    # ---------------------------------------------------------------------------------------------#
+
     def update_target_model(self):
         self.target_model.load_state_dict(self.model.state_dict())
 
-    # -----------------------------------------------------------------------------------------#
+
     def append_sample(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
