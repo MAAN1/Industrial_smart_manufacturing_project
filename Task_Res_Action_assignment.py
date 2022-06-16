@@ -3,7 +3,7 @@
 import numpy as np
 import random
 
-def task_assignment_action(T):
+def Action_assignment(T):
     k = T
     job_assignment_action = []
     null_action = np.zeros(k)

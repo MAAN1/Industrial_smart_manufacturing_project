@@ -1,16 +1,16 @@
 import gym
 import numpy as np
 from gym import spaces
-from Action_assignment import ActionsSet_Task, ActionsSet_Resource
+from Task_Res_Action_assignment import Action_assignment, Resource_assignmnet_action
 class Assembly_line_Env(gym.Env):
 	def __init__(self):
 		self.WorkstationsNumber = 2
 		self.TasksNumber = 15
 		self.ResourcesNumber = 3
-		self.ActionsSet_Task_W1 = ActionsSet_Task(self.TasksNumber)
-		self.ActionsSet_Resource_W1 = ActionsSet_Resource(self.ResourcesNumber)
-		self.ActionsSet_Task_W2 = ActionsSet_Task(self.TasksNumber)
-		self.ActionsSet_Resource_W2 = ActionsSet_Resource(self.ResourcesNumber)
+		self.ActionsSet_Task_W1 = Action_assignment(self.TasksNumber)
+		self.ActionsSet_Resource_W1 = Resource_assignmnet_action(self.ResourcesNumber)
+		self.ActionsSet_Task_W2 = Action_assignment(self.TasksNumber)
+		self.ActionsSet_Resource_W2 = Resource_assignmnet_action(self.ResourcesNumber)
 		high = np.full(self.WorkstationsNumber + self.TasksNumber + self.WorkstationsNumber*self.ResourcesNumber+1, np.finfo(np.float32).max)
 
 		# Number of actions in our environment
@@ -49,6 +49,7 @@ class Assembly_line_Env(gym.Env):
 		self.C_max = np.zeros(1)
 		self.workstation_processing_task = np.zeros(self.WorkstationsNumber)
 		# workstation status checking
+
 	def twin_check(self, action_task_WS1, action_task_WS2):
 		twin = 0
 		if action_task_WS1 > 0:
@@ -56,9 +57,6 @@ class Assembly_line_Env(gym.Env):
 				#print("work_station_1 and 2 requesting same task")
 				twin = 1
 		return twin
-	def observation(self):
-		pass
-		return
 
 	def step(self, action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2):
 		"""
@@ -198,12 +196,12 @@ class Assembly_line_Env(gym.Env):
 								self.n_duration_R.append(0.0)    # +1 is given by the release time
 								self.n_bay_start_R.append(i)
 								self.n_job_id_R.append(str(Required_R[0]+1))
-								#a2[i*R+Required_R[0]] = 0
+								a2[i*R+Required_R[0]] = 0
 							else:
 								WS_resource[i*R+Required_R[0]] -= 1
 								if WS_resource[i*R+Required_R[0]] == 0:
 									ResourcesState[i*R+Required_R[0]]= 0
-									print('the resources have run out', Required_R[0]+1,'in the WS ', i+1)
+									#print('the resources have run out', Required_R[0]+1,'in the WS ', i+1)
 					# print('Task # ', task_index[z]+1 ,'which has a duration of ',Tasks_duration[task_index[z]], ' has been assigned to WS : ',i+1, " at the following state", AssignedState)
 		#########################################################################################################################################
 			# Resource assignment to workstations after action a2[]

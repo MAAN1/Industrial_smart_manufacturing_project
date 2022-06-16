@@ -4,7 +4,7 @@ import numpy as np
 from collections import deque
 import torch.optim as optim
 from torch.autograd import Variable
-from Deep_Learning_Part import DQN
+from P_2_RL import DQN
 import torch.nn.functional as F
 from environment_copy import Assembly_line_Env
 
@@ -24,6 +24,7 @@ or we can decide according to our need.
 
 class DQNAgent():
     def __init__(self, state_size, action_size):
+
         """
         Agnet parameter
         deque: is double ended data structure for storing and removing the data here we use to create the memory of agent
@@ -46,26 +47,28 @@ class DQNAgent():
         self.epsilon = 1.0
         self.batch_size = 64
         self.train_start = 1000
+
+        """
+        RL_Agent memory creation by deque data structure 
+        NN model for agent
+        weight function for NN to find the optimal values to reduce the error
+        target model to check the difference between prediction and actual target 
         
-        
-  
+        Questions: What is input of NN
+                   which policy agent following 
+                   what is  action 
+        """
+
         self.memory = deque(maxlen=self.memory_size)
-        # Critic network (NN) initialization along with weights 
-        self.model = DQN(state_size, action_size) # critic network 
+        self.model = DQN(state_size, action_size)
         self.model.apply(self.weights_init)
 
         """
-        target network/ evaluater network for 
+        target model
         """
 
         self.target_model = DQN(state_size, action_size)
-        
-        # optimizer adm
-        
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
-        # update in target metwork after calulating the loss 
-        # we need to fix after how my iteration we need to update our target model 
         self.update_target_model()
 
         """
@@ -82,8 +85,7 @@ class DQNAgent():
         classname = m.__class__.__name__
         if classname.find('Linear') != -1:
             torch.nn.init.xavier_uniform_(m.weight)
-       
-   # action use for resource assignment by following policy: epslion or random 
+
     def get_action(self, state,  epsilon_custom):
 
         if np.random.rand() <= epsilon_custom:
@@ -103,7 +105,6 @@ class DQNAgent():
         name of function is not okay we need to change
         mask_free position: mean we have following avalable task for execution
     """
-    # task assignment function
 
     def get_action_mask(self, state, TasksState_mask, null_act, epsilon_custom):
         rand_action = 0
@@ -112,9 +113,8 @@ class DQNAgent():
         state = np.reshape(state, [1, state_size])
         state = torch.from_numpy(state)
         state = Variable(state).float().cpu()
-        pred = self.model(state)    # model (critic network ) call the forward function to get the prediction DL part
+        pred = self.model(state) # model call the forward function to get the prediction DL part
         pred_array = pred.detach().cpu().numpy()
-        
         calculated_q_value = [] # list
         for i in range(len(mask_free_position)):
             calculated_q_value.append(pred_array[0][mask_free_position[i]])
@@ -124,6 +124,13 @@ class DQNAgent():
         else:
             max_index = np.argmax(calculated_q_value)
             action = mask_free_position[max_index]
+
+        """
+        if rand_action==1:
+            print("random action is selected by get_action_masked:", action)
+        else:
+            print("maxi_q values action selected by get_Action_masked:", action)
+        """
 
         return action , rand_action
 
@@ -180,12 +187,13 @@ class DQNAgent():
     """
 
     def train_model(self):
-        
-        """
-        training model using reply buffer 
-        """
         mini_batch = random.sample(self.memory, self.batch_size)
         mini_batch = np.array(mini_batch).transpose()
+
+        """
+        step function (output)
+        """
+
         states = np.vstack(mini_batch[0])
         actions = list(mini_batch[1])
         rewards = list(mini_batch[2])
@@ -211,10 +219,12 @@ class DQNAgent():
         Next state variable for storage 
         target q values 
         loss function application
-        optimizer application     
+        optimizer application 
+      
+       
         Learning part start here
         """
-        # commulative reward and 
+
         next_states = torch.Tensor(next_states)
         next_states = Variable(next_states).float()
         next_pred = self.target_model(next_states).data
@@ -222,7 +232,6 @@ class DQNAgent():
         dones = torch.FloatTensor(dones)
         target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]
         target = Variable(target)
-        
         self.optimizer.zero_grad()
         loss = F.mse_loss(pred,target)
         loss.backward()

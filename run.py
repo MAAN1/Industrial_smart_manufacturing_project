@@ -1,20 +1,22 @@
 import pylab
 import math
 import numpy as np
-from Deep_Learning_Part import DQN
-from Rein_Learning_Part import DQNAgent
+from P_1_DL import DQN
+from P_2_RL import DQNAgent
 from Render_MultiAgentWS_Mask import Render_MultiAgent
 from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
-from environment_copy import Assembly_line_Env
+from Environment import Assembly_line_Env
 from numpy import savez_compressed
-EPISODES = 5
+EPISODES = 50
 Max_Steps = 65
+
 """
 Environment initialization
 agent initialization (state, action)
 ...
 storage variables are initialization
 """
+
 if __name__ == "__main__":
     env = Assembly_line_Env()
     state_size = env.observation_space.shape[0]
@@ -31,7 +33,6 @@ if __name__ == "__main__":
     model_Resource_WS1 = DQN(state_size, action_size_resource)
     agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)
 
-
     #Agent_Task_WS2
     model_Task_WS2 = DQN(state_size, action_size_task)
     agent_Task_WS2 = DQNAgent(state_size, action_size_task)
@@ -46,38 +47,29 @@ if __name__ == "__main__":
     step_list, epsilon_list = [], []
 
     """
-    RL Agent loop
+    DQN training agent 
     """
     for e in range(EPISODES):   # for each episode
         step = 0
         done = False
         score = 0
         alpha = 0.13
-        epsilon_custom =math.exp(-e/(alpha*EPISODES))
-        #epsilon_custom=0.9
+        #epsilon_custom =math.exp(-e/(alpha*EPISODES))
+        epsilon_custom=0.9
         state = env.reset()
         env.reset_variable()
         state = np.reshape(state, [1, state_size])
+        # second loop of DQN agent training
         while not done:
             iteration = 0
             null_act = [0]
             tasks_state_mask = env.state[env.WorkstationsNumber:env.WorkstationsNumber+env.TasksNumber]
             work_state = env.state[:env.WorkstationsNumber]
-            """
-            function calling start from here:
-            Resource assignment
-            Task assignment 
-            """
             action_resource_WS1 = agent_Resource_WS1.get_action(state,epsilon_custom)
             action_resource_WS2 = agent_Resource_WS2.get_action(state,epsilon_custom)
 
             action_task_WS1, list_masked_task = agent_Task_WS1.get_action_mask_feasible(state, env, tasks_state_mask, work_state[0], null_act, epsilon_custom)
             action_task_WS2, list_masked_task = agent_Task_WS2.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon_custom)
-
-
-            """
-            Double check if all constraints are satisfied and we have only feasible action, last check for final action
-            """
 
             check_twin = env.twin_check(action_task_WS1, action_task_WS2)
             if check_twin==1:
@@ -86,19 +78,12 @@ if __name__ == "__main__":
                 action_task_WS2, random_action = agent_Task_WS2.get_action_mask(state,tasks_state_mask,null_act,epsilon_custom)
                 tasks_state_mask[action_temp-1] = 0
 
-            """
-            print("Workstation state:", work_state)
-            print("Action selected by w_1 and W_:", action_task_WS1, action_task_WS2)
-            """
+
             #################################################################################################################
-            # print("Step #:", step, " of episode", e)
+            print("Step #:", step, " of episode", e)
             #print("Final action selected for step :\n", "action 1:" ,action_task_WS1, "\n" , "action 2:", action_task_WS2)
             next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)
             next_state = np.reshape(next_state, [1, state_size])
-
-            """
-            Memory creation
-            """
 
             agent_Task_WS1.append_sample(state, action_task_WS1, reward, next_state, done)
             agent_Resource_WS1.append_sample(state, action_resource_WS1, reward, next_state, done)
@@ -114,10 +99,6 @@ if __name__ == "__main__":
             score += reward
             state = next_state
             step +=1
-
-            """
-            Stopping criteria: in each episode  
-            """
 
             if step == Max_Steps:
                 agent_Task_WS1.update_target_model()
@@ -143,7 +124,7 @@ if __name__ == "__main__":
                 job_id_superlist_R.append(env.n_job_id_R)
 
                 # print("Current episode:", e, "  score:", score, "  memory length:",len(agent_Task_WS1.memory), " epsilon:", epsilon_custom)
-                break
+
             # after each episode i am updating the model
             if done:
                 agent_Task_WS1.update_target_model()
