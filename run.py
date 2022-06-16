@@ -26,18 +26,15 @@ if __name__ == "__main__":
     print("action_size:", action_size_task)
     action_size_resource = env.ActionSpace_resource_number.n
 
-    #Agent_Task_WS1
     model_Task_WS1 = DQN(state_size, action_size_task)
     agent_Task_WS1 = DQNAgent(state_size, action_size_task)
-    #Agent_Resource_WS1
+
     model_Resource_WS1 = DQN(state_size, action_size_resource)
     agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)
 
-    #Agent_Task_WS2
     model_Task_WS2 = DQN(state_size, action_size_task)
     agent_Task_WS2 = DQNAgent(state_size, action_size_task)
 
-    #Agent_Resource_WS2
     model_Resource_WS2 = DQN(state_size, action_size_resource)
     agent_Resource_WS2 = DQNAgent(state_size, action_size_resource)
 
