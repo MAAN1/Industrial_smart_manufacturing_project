@@ -1,7 +1,7 @@
 import pylab
 import math
 import numpy as np
-from P_1_DL import DQN
+from  import DQN
 from P_2_RL import DQNAgent
 from Render_MultiAgentWS_Mask import Render_MultiAgent
 from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
