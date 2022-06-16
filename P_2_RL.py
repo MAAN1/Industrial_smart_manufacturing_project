@@ -46,19 +46,9 @@ class DQNAgent():
         self.epsilon = 1.0
         self.batch_size = 64
         self.train_start = 1000
-
-        """
-        RL_Agent memory creation by deque data structure 
-        NN model for agent
-        weight function for NN to find the optimal values to reduce the error
-        target model to check the difference between prediction and actual target 
         
-        Questions: What is input of NN
-                   which policy agent following 
-                   what is  action 
-        """
         
-        # agent memory
+  
         self.memory = deque(maxlen=self.memory_size)
         # Critic network (NN) initialization along with weights 
         self.model = DQN(state_size, action_size) # critic network 
