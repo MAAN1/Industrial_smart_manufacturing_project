@@ -260,18 +260,13 @@ class Assembly_line_Env(gym.Env):
 		# Reward calculation
 
 		total_reward = 0
-		if unfeasible_resource==0:
-			RewardResources = good_resource_assignment_reward
-		else:
-			RewardResources = bad_resource_assignment_reward
-
-		#RewardResources =  good_resource_assignment_reward + bad_resource_assignment_reward
+		RewardResources =  good_resource_assignment_reward + bad_resource_assignment_reward
 
 		if unfeasible_resource ==0:
 			time +=1
 		RewardTasks = 0
 		if AssignedState[0] - AssignedStateTemp  > 0:
-			RewardTasks = 0.5 *(AssignedState[0] - AssignedStateTemp)
+			RewardTasks = 5 *(AssignedState[0] - AssignedStateTemp)
 			#RewardTasks = 1
 		reward = RewardTasks  + RewardResources
 		sumWS = 0
@@ -282,7 +277,7 @@ class Assembly_line_Env(gym.Env):
 			done = True
 			#reward = RewardTasks  + RewardResources
 
-			reward =  10 * 1 /C_max[0]
+			#reward =  10 * 1 /C_max[0]
 		else:
 			done = False
 
@@ -291,8 +286,6 @@ class Assembly_line_Env(gym.Env):
 		self.time = time
 
 		return np.array(self.state), reward, done, {}
-
-	# Precidence constraint checking
 
 	def check_constraint(self, action_task_j):
 			W = self.WorkstationsNumber
