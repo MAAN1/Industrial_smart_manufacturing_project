@@ -11,8 +11,7 @@ from Environment import Assembly_line_Env
 env = Assembly_line_Env()
 state_size = env.observation_space.shape[0]
 action_size_task = env.ActionSpace_task_number.n
-action_size_resource = env.ActionSpace_resource_number.n
-
+#action_size_resource = env.ActionSpace_resource_number.n
 """
 Reinforcement Learning Part (RL)
 Main agent class 
@@ -32,14 +31,19 @@ class DQNAgent():
         self.memory_size = 2000
         self.epsilon = 1.0
         self.batch_size = 64
-        self.train_start = 1000
+        self.train_start = 100
 
         self.memory = deque(maxlen=self.memory_size)
+
+        # Online network
         self.model = DQN(state_size, action_size)
         self.model.apply(self.weights_init)
 
-        # DQN models
+        # target network
         self.target_model = DQN(state_size, action_size)
+        self.target_model.apply(self.weights_init)
+
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.update_target_model()
 
@@ -48,9 +52,9 @@ class DQNAgent():
         if classname.find('Linear') != -1:
             torch.nn.init.xavier_uniform_(m.weight)
 
-    def get_action(self, state,  epsilon_custom):
+    def get_action(self, state,  epsilon):
 
-        if np.random.rand() <= epsilon_custom:
+        if np.random.rand() < epsilon:
             return random.randrange(self.action_size)
         else:
             state = torch.from_numpy(state)
@@ -61,7 +65,7 @@ class DQNAgent():
 
         # Action sampling
 
-    def get_action_mask(self, state, TasksState_mask, null_act, epsilon_custom):
+    def get_action_mask(self, state, TasksState_mask, null_act, epsilon):
         rand_action = 0
         mask = np.concatenate([null_act, TasksState_mask])
         mask_free_position = [i for i, x in enumerate(mask) if x == 0]
@@ -73,7 +77,7 @@ class DQNAgent():
         calculated_q_value = [] # list
         for i in range(len(mask_free_position)):
             calculated_q_value.append(pred_array[0][mask_free_position[i]])
-        if np.random.rand() <= epsilon_custom:
+        if np.random.rand() < epsilon:
             action = mask_free_position[random.randint(0,len(mask_free_position)-1)]
             rand_action = 1
         else:
@@ -83,7 +87,7 @@ class DQNAgent():
         return action , rand_action
     # Constraints checking
 
-    def get_action_mask_feasible(self, state, env, Tasks_State_mask, work_state, null_act, epsilon_custom):
+    def get_action_mask_feasible(self, state, env, Tasks_State_mask, work_state, null_act, epsilon):
         list_masked_task = []
         num_unfeasible_taken_action = 0
         mask_temp = Tasks_State_mask
@@ -91,11 +95,11 @@ class DQNAgent():
         if work_state ==1:
             action_task_WS = 0
         else:
-            action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)
+            action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon)
 
             unfeasible_flag = 1
             while(unfeasible_flag == 1):
-                action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon_custom)
+                action_task_WS, random_action = self.get_action_mask(state, mask_temp, null_act, epsilon)
                 unfeasible_flag = env.check_constraint(action_task_WS)
                 if unfeasible_flag ==1:
                     mask_temp[action_task_WS-1]= 1
@@ -111,12 +115,16 @@ class DQNAgent():
     def append_sample(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-        # Learning form experience
+    # So for we create our memory for agent and now we select samples from the memory to train our agent.
+    # memory samples are selected by random way
+    # we pass these sample to agents as input and we predict the future values on bases of Agent experience
+
     def train_model(self):
 
         mini_batch = random.sample(self.memory, self.batch_size)
         mini_batch = np.array(mini_batch).transpose()
 
+        # step 1 action send to environment
         states = np.vstack(mini_batch[0])
         actions = list(mini_batch[1])
         rewards = list(mini_batch[2])
@@ -125,24 +133,31 @@ class DQNAgent():
         dones = dones.astype(int)
         states = torch.Tensor(states)
         states = Variable(states).float()
+
         pred = self.model(states)
+
         a = torch.LongTensor(actions).view(-1, 1)
         one_hot_action = torch.FloatTensor(self.batch_size, self.action_size).zero_()
         one_hot_action.scatter_(1, a, 1)
         pred = torch.sum(pred.mul(Variable(one_hot_action)), dim=1)
 
-        """   
-        Learning part start here
-        """
+        # Step 2: Responce from environment
 
         next_states = torch.Tensor(next_states)
         next_states = Variable(next_states).float()
-        next_pred = self.target_model(next_states).data
+
+        next_pred = self.target_model(next_states).data # from target network
         rewards = torch.FloatTensor(rewards)
         dones = torch.FloatTensor(dones)
+
+
         target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]
         target = Variable(target)
-        self.optimizer.zero_grad()
+
         loss = F.mse_loss(pred,target)
+
+        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        #return loss
