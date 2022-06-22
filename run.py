@@ -21,12 +21,10 @@ from Render_MultiAgentWS_Mask import Render_MultiAgent
 from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
 from Environment import Assembly_line_Env
 
-
 DEVICE = torch.device("cpu")
 env = Assembly_line_Env()
-
-EPISODES = 500
-Max_Steps = 65
+EPISODES = 100
+Max_Steps = 85
 Target_replace_feq = 50
 class DQNAgent():
     def __init__(self, state_size, action_size):
@@ -34,24 +32,21 @@ class DQNAgent():
         self.action_size = action_size
         self.discount_factor = 0.99
         self.learning_rate = 0.001
-        self.memory_size = 20000
+        self.memory_size = 30000
         self.epsilon = 1.0
-        self.batch_size = 32
-        self.train_start = 3000
+        self.batch_size = 64
+        self.train_start = 2000
         self.memory = deque(maxlen=self.memory_size)
         self.loss_fun= torch.nn.MSELoss()
         self.learning_step = 0
-
         # Online network
         self.model = DQN(state_size, action_size)
         self.model.apply(self.weights_init)
-
         # target network
         self.target_model = DQN(state_size, action_size)
         self.target_model.apply(self.weights_init)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-
 
     def weights_init(self, m):
         classname = m.__class__.__name__
@@ -180,11 +175,13 @@ if __name__ == "__main__":
         action_size_task = env.ActionSpace_task_number.n
         print("action_size:", action_size_task)
         action_size_resource = env.ActionSpace_resource_number.n
-
+        model_Task_WS1 = DQN(state_size, action_size_task)
         agent_Task_WS1 = DQNAgent(state_size, action_size_task)
+        model_Task_WS2 = DQN(state_size, action_size_task)
         agent_Task_WS2 = DQNAgent(state_size, action_size_task)
-
+        model_Resource_WS1 = DQN(state_size, action_size_resource)
         agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)
+        model_Resource_WS2 = DQN(state_size, action_size_resource)
         agent_Resource_WS2 = DQNAgent(state_size, action_size_resource)
 
     # writer = SummaryWriter() section
@@ -203,6 +200,7 @@ if __name__ == "__main__":
             best_reward=0
             episode_number = []
             average_reward = 0
+            random_action_counter=0
             average_reward_number=[]
             alpha = 0.13
             epsilon=math.exp(-e/(alpha*EPISODES))
@@ -228,27 +226,41 @@ if __name__ == "__main__":
                     tasks_state_mask[action_task_WS1-1] = 1
                     action_task_WS2, random_action = agent_Task_WS2.get_action_mask(state,tasks_state_mask,null_act,epsilon)
                     tasks_state_mask[action_temp-1] = 0
-
+                    if random_action == 1:
+                        random_action_counter +=1
+                #print("Action Proposed by agnts are:", action_task_WS1, action_task_WS2, "episode:", e)
+                #print("Action proposed by agents are:", action_resource_WS1, action_task_WS2, "episode:", e)
                 next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)
                 next_state = np.reshape(next_state, [1, state_size])
+                #print("Reward trend during current episode:", e, "Reward", reward )
 
             # Memory storage
                 agent_Task_WS1.append_sample(state, action_task_WS1, reward, next_state, done)
                 agent_Resource_WS1.append_sample(state, action_resource_WS1, reward, next_state, done)
                 agent_Task_WS2.append_sample(state, action_task_WS2, reward, next_state, done)
                 agent_Resource_WS2.append_sample(state, action_resource_WS2, reward, next_state, done)
+                # print("final reward for each agent:", score)
+                """
                 score += reward
+                #print("Final reward", score)
                 state = next_state
                 step +=1
+                """
                 if len(agent_Task_WS1.memory) > agent_Task_WS1.train_start:
+
                     if learn_flag:
                         print("learning start...")
                         learn_flag = False
                     loss_1 = agent_Task_WS1.train_model()
-                    grade_to_num = torch.Tensor.detach(loss_1).numpy()
+                    #grade_to_num = torch.Tensor.detach(loss_1).numpy()
                     loss_2 = agent_Resource_WS1.train_model()
                     loss_3 = agent_Task_WS2.train_model()
                     loss_4 = agent_Resource_WS2.train_model()
+
+                score += reward
+                state = next_state
+                step +=1
+
                 if step == Max_Steps:
                     result = [score,e,step]
                     scores.append(score)
@@ -287,10 +299,14 @@ if __name__ == "__main__":
                     episodes_1.append(e)
                     step_list.append(step)
                     epsilon_list.append(epsilon)
-            max_index_col = np.argmax(scores)
+            print("episode:", e, "total executed job:", env.n_job_id, "reward calculated:", score)
+
+        max_index_col = np.argmax(scores)
 
 pylab.figure(1)
 pylab.plot(episodes, scores, 'b', linewidth=0.1, markersize=1)
+#pylab.figure(2)
+#pylab.plot(episodes, results, 'b', linewidth=0.1, markersize=1)
 print("job id superlist", job_id_superlist[max_index_col])
 pylab.show()
 
