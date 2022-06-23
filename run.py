@@ -14,6 +14,8 @@ from collections import deque
 
 import matplotlib.pyplot as plt
 import pylab
+import seaborn as sns
+import pandas as pd
 
 # customized
 from Deep_Learning_Part import DQN
@@ -23,7 +25,7 @@ from Environment import Assembly_line_Env
 
 DEVICE = torch.device("cpu")
 env = Assembly_line_Env()
-EPISODES = 200
+EPISODES = 2
 Max_Steps = 300
 Target_replace_feq = 50
 class DQNAgent():
@@ -299,16 +301,22 @@ if __name__ == "__main__":
                     episodes_1.append(e)
                     step_list.append(step)
                     epsilon_list.append(epsilon)
-            print("episode:", e, "total executed job:", env.n_job_id, "reward calculated:", score)
+            max_index_col = np.argmax(scores)
+            #print("result of each episode:", result, type(result))
+            print("result of each episode:", e, score)
 
-        max_index_col = np.argmax(scores)
-pylab.figure(1)
-pylab.plot(episodes, scores, 'b', linewidth=0.1, markersize=1)
-#pylab.figure(2)
-#pylab.plot(episodes, results, 'b', linewidth=0.1, markersize=1)
-print("job id superlist", job_id_superlist[max_index_col], scores[max_index_col])
-pylab.show()
 
-#Render_MultiAgent(start_superlist[max_index_col],duration_superlist[max_index_col], machine_superlist[max_index_col], job_id_superlist[max_index_col])
-#Render_Res_MultiAgent(start_superlist_R[max_index_col],duration_superlist_R[max_index_col], machine_superlist_R[max_index_col], job_id_superlist_R[max_index_col])
+#-----------------#
 
+rewards=np.array(scores)
+sns.set()
+#plt.plot("Secors / rewards ",EPISODES, np.array(scores))
+#rewards=np.vstack((rewards1,rewards2)) #  Merge array
+df = pd.DataFrame(scores).melt(var_name='episode',value_name='reward') #  This conversion method is recommended
+print(df)
+sns.lineplot(x="episode", y="reward", data=df)
+#sns.lineplot(x=EPISODES,y=rewards)
+plt.xlabel("episode")
+plt.ylabel("reward")
+#plt.plot(rewards)
+plt.show()
