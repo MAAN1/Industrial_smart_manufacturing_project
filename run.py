@@ -23,8 +23,8 @@ from Environment import Assembly_line_Env
 
 DEVICE = torch.device("cpu")
 env = Assembly_line_Env()
-EPISODES = 100
-Max_Steps = 85
+EPISODES = 200
+Max_Steps = 300
 Target_replace_feq = 50
 class DQNAgent():
     def __init__(self, state_size, action_size):
@@ -35,10 +35,10 @@ class DQNAgent():
         self.memory_size = 30000
         self.epsilon = 1.0
         self.batch_size = 64
-        self.train_start = 2000
+        self.train_start = 3000
         self.memory = deque(maxlen=self.memory_size)
         self.loss_fun= torch.nn.MSELoss()
-        self.learning_step = 0
+        self.learning_step =3000
         # Online network
         self.model = DQN(state_size, action_size)
         self.model.apply(self.weights_init)
@@ -302,14 +302,13 @@ if __name__ == "__main__":
             print("episode:", e, "total executed job:", env.n_job_id, "reward calculated:", score)
 
         max_index_col = np.argmax(scores)
-
 pylab.figure(1)
 pylab.plot(episodes, scores, 'b', linewidth=0.1, markersize=1)
 #pylab.figure(2)
 #pylab.plot(episodes, results, 'b', linewidth=0.1, markersize=1)
-print("job id superlist", job_id_superlist[max_index_col])
+print("job id superlist", job_id_superlist[max_index_col], scores[max_index_col])
 pylab.show()
 
-
-
+#Render_MultiAgent(start_superlist[max_index_col],duration_superlist[max_index_col], machine_superlist[max_index_col], job_id_superlist[max_index_col])
+#Render_Res_MultiAgent(start_superlist_R[max_index_col],duration_superlist_R[max_index_col], machine_superlist_R[max_index_col], job_id_superlist_R[max_index_col])
 

@@ -3,9 +3,17 @@ import plotly.figure_factory as ff
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 25})
 def Render_Res_MultiAgent(n_start_time, n_duration_time, n_bay_start, n_job_id):
-	op = ['1','2','3','4','5','6','7','8']
+	op = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15']
 
 	colors = ('rgb(152, 223, 138)',
+			  'rgb(227, 119, 194)',
+			  'rgb(23, 190, 207)',
+			  'rgb(58, 149, 136)',
+			  'rgb(107, 127, 135)',
+			  'rgb(46, 180, 50)',
+			  'rgb(150, 44, 50)',
+			  'rgb(100, 47, 150)',
+			  'rgb(152, 223, 138)',
 			  'rgb(227, 119, 194)',
 			  'rgb(23, 190, 207)',
 			  'rgb(58, 149, 136)',

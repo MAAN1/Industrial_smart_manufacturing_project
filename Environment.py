@@ -21,7 +21,6 @@ class Assembly_line_Env(gym.Env):
 		high = np.full(self.W_number + self.T_number + self.W_number*self.R_number+1, np.finfo(np.float32).max)
 		self.ActionSpace_task_number = spaces.Discrete(self.T_number+1)
 		self.ActionSpace_resource_number = spaces.Discrete(self.R_number+1)
-
 		# Observation space in our case
 		self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 		self.state = None
@@ -221,12 +220,13 @@ class Assembly_line_Env(gym.Env):
 				C_temp = 0
 			else:
 				C_temp -= WS_busy_duration[max_index]
-			"""	
+		"""
+			
 			if C_temp > C_temp_prec_action:
 				C_increment = C_temp
 				C_temp_prec_action = C_temp
 		C_max[0] += C_increment
-		print(C_max[0])
+		#print(C_max[0])
 		"""
 		total_reward = 0
 		reward_t_r =0
@@ -235,23 +235,41 @@ class Assembly_line_Env(gym.Env):
 
 		RewardResources = good_resource_assignment_reward + bad_resource_assignment_reward
 		# bad_resource_assignment_reward
+		Remaning_list_of_assigned_tasks = [i for i, x in enumerate(T_state) if x == 0]
+		#print(Remaning_list_of_assigned_tasks)
 
 		if unfeasible_resource==0:
 			time +=1
 		RewardTasks = 0
 		reward=0
+		reward_1=0
+		reward_2=0
+		reward_3=0
+		reward_4=0
+		reward_5=0
+		# resource and workstation bases resources
+		# Case 1
 		if np.sum(WS_busy_duration/tot_task_duration)> 0 and unfeasible_resource==0:
-			reward = np.sum(WS_busy_duration/tot_task_duration)
+			reward_1 = np.sum(WS_busy_duration/tot_task_duration)+ 0.5
+		# Case 2
 		elif np.sum(WS_busy_duration/tot_task_duration) == 0 and unfeasible_resource==1:
-			reward=-1
-		elif np.sum(WS_busy_duration/tot_task_duration) > 0 or unfeasible_resource==0:
-			reward = 0
-		elif np.sum(WS_busy_duration/tot_task_duration) ==0  or unfeasible_resource==1:
-			reward =0
-		if AssignedState[0] - AssignedStateTemp  > 0:
-			reward_t_r	 = 1.5*(AssignedState[0] - AssignedStateTemp)
+			reward_2= -1
+		# Case 3
+		elif np.sum(WS_busy_duration/tot_task_duration) > 0:
+			reward_3 = np.sum(WS_busy_duration/tot_task_duration)
+		elif unfeasible_resource==0:
+			reward_4 = good_resource_assignment_reward
+		elif unfeasible_resource==1:
+			reward_5= bad_resource_assignment_reward
+		# Case 4
+		#elif np.sum(WS_busy_duration/tot_task_duration) ==0  or unfeasible_resource==1:
+		#	reward_4 =0
 
-		reward = reward_t_r + RewardResources
+		if AssignedState[0] - AssignedStateTemp  > 0:
+			#reward_t_r	 = 0.5*(AssignedState[0] - AssignedStateTemp)
+			reward_t_r = 1
+
+		reward = reward_t_r + reward_1+reward_2+reward_3 + reward_4 +reward_5
 
 		sumWS = 0
 		for i in range(W):
@@ -259,7 +277,7 @@ class Assembly_line_Env(gym.Env):
 
 		if AssignedState[0] == T and sumWS == 0:
 			done = True
-			#reward = np.sum(total_execution_time)/tot_task_duration
+			reward = np.sum(total_execution_time)/tot_task_duration
 		#elif np.sum(WS_busy_duration/tot_task_duration)==1 or unfeasible_resource==0:
 			#reward = 1
 			#
