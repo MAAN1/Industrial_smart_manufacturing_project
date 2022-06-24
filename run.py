@@ -25,7 +25,7 @@ from Environment import Assembly_line_Env
 
 DEVICE = torch.device("cpu")
 env = Assembly_line_Env()
-EPISODES = 2
+EPISODES = 100
 Max_Steps = 300
 Target_replace_feq = 50
 class DQNAgent():
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     # writer = SummaryWriter() section
 
-        scores, episodes, scores_1, episodes_1, results, loss_agent_1= [], [], [], [], [], []
+        scores, episodes, scores_1, episodes_1, results, loss_agent_1, store= [], [], [], [], [], [], []
         start_superlist, duration_superlist, machine_superlist,job_id_superlist = [],[],[],[]
         start_superlist_R, duration_superlist_R, machine_superlist_R,job_id_superlist_R = [],[],[],[]
         step_list, epsilon_list = [], []
@@ -260,16 +260,19 @@ if __name__ == "__main__":
                     loss_4 = agent_Resource_WS2.train_model()
 
                 score += reward
+                scores_1.append(reward)
                 state = next_state
                 step +=1
 
+
                 if step == Max_Steps:
-                    result = [score,e,step]
+
+                    result = [reward, e, score]
                     scores.append(score)
                     episodes.append(e)
-                    scores_1.append(score)
+                    #scores_1.append(score)
                     episodes_1.append(e)
-                    results.append(result)
+                    results.append(reward)
                     step_list.append(step)
                     epsilon_list.append(epsilon)
 
@@ -296,8 +299,8 @@ if __name__ == "__main__":
                     result = [score,e,step]
                     scores.append(score)
                     episodes.append(e)
-                    results.append(result)
-                    scores_1.append(score)
+                    results.append(reward)
+                    #scores_1.append(score)
                     episodes_1.append(e)
                     step_list.append(step)
                     epsilon_list.append(epsilon)
@@ -307,16 +310,39 @@ if __name__ == "__main__":
 
 
 #-----------------#
+#print(scores_1)
+#print("All values:", scores, type(scores))
+l_a = np.array(scores)
+#print("All values to array ",l_a, type(l_a))
 
-rewards=np.array(scores)
+#tuple(map(tuple, l_a))
+a_t = tuple(l_a)
+#print("array to tuple", a_t)
+
+df=[]
+df = pd.DataFrame([a_t])
+sns.set()
+sns.lineplot(data=df.T)
+#pd.DataFrame([a_t].melt(var_name='episode',value_name='reward'))
+print(df.T)
+plt.show()
+#for i in range(len(l_a)):
+#    df.append(pd.DataFrame(l_a[i]).melt(var_name='episode',value_name='reward'))
+#prin(df)
+"""
+
+#data = reward_at_each_iteration()
+#print("store",store)
+#print("Concatinated vales of scores:",rewards, "scores", scores,  type(rewards), type(scores))
 sns.set()
 #plt.plot("Secors / rewards ",EPISODES, np.array(scores))
-#rewards=np.vstack((rewards1,rewards2)) #  Merge array
-df = pd.DataFrame(scores).melt(var_name='episode',value_name='reward') #  This conversion method is recommended
+rewards=np.vstack((scores_1)) #  Merge array
+#print("after concatination:", rewards, type(rewards))
+df = pd.DataFrame(rewards).melt(var_name='episode',value_name='reward') #  This conversion method is recommended
 print(df)
 sns.lineplot(x="episode", y="reward", data=df)
-#sns.lineplot(x=EPISODES,y=rewards)
-plt.xlabel("episode")
-plt.ylabel("reward")
+sns.lineplot(x=EPISODES,y=rewards)
 #plt.plot(rewards)
 plt.show()
+"""
+
