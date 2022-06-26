@@ -3,7 +3,7 @@ import numpy as np
 import math
 import random
 from numpy import savez_compressed
-
+import csv
 
 import torch
 import torch.nn as nn
@@ -11,6 +11,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import deque
+from operator import add
 
 import matplotlib.pyplot as plt
 import pylab
@@ -188,7 +189,7 @@ if __name__ == "__main__":
 
     # writer = SummaryWriter() section
 
-        scores, episodes, scores_1, episodes_1, results, loss_agent_1, store= [], [], [], [], [], [], []
+        scores, episodes, scores_1, episodes_1, results, loss_agent_1, store, job_end= [], [], [], [], [], [], [], []
         start_superlist, duration_superlist, machine_superlist,job_id_superlist = [],[],[],[]
         start_superlist_R, duration_superlist_R, machine_superlist_R,job_id_superlist_R = [],[],[],[]
         step_list, epsilon_list = [], []
@@ -242,12 +243,12 @@ if __name__ == "__main__":
                 agent_Task_WS2.append_sample(state, action_task_WS2, reward, next_state, done)
                 agent_Resource_WS2.append_sample(state, action_resource_WS2, reward, next_state, done)
                 # print("final reward for each agent:", score)
-                """
+
                 score += reward
                 #print("Final reward", score)
                 state = next_state
                 step +=1
-                """
+
                 if len(agent_Task_WS1.memory) > agent_Task_WS1.train_start:
 
                     if learn_flag:
@@ -259,11 +260,12 @@ if __name__ == "__main__":
                     loss_3 = agent_Task_WS2.train_model()
                     loss_4 = agent_Resource_WS2.train_model()
 
+                """
                 score += reward
                 scores_1.append(reward)
                 state = next_state
                 step +=1
-
+                """
 
                 if step == Max_Steps:
 
@@ -291,6 +293,7 @@ if __name__ == "__main__":
                     duration_superlist.append(env.n_duration)
                     machine_superlist.append(env.n_bay_start)
                     job_id_superlist.append(env.n_job_id)
+
                     start_superlist_R.append(env.n_start_time_R)
                     duration_superlist_R.append(env.n_duration_R)
                     machine_superlist_R.append(env.n_bay_start_R)
@@ -304,9 +307,55 @@ if __name__ == "__main__":
                     episodes_1.append(e)
                     step_list.append(step)
                     epsilon_list.append(epsilon)
-            max_index_col = np.argmax(scores)
+
+                    #job_end = env.n_start_time[env.n_job_id] + env.n_duration[env.n_job_id]
+
             #print("result of each episode:", result, type(result))
             print("result of each episode:", e, score)
+
+        max_index_col = np.argmax(scores)
+
+        res_list = []
+        #for i in range(0, len(test_list1)):
+        #    res_list.append(test_list1[i] + test_list2[i])
+        #list_one= job_id_superlist[max_index_col]
+        print(max)
+        list_one=[]
+        list_two=[]
+        res_list =[]
+
+        list_one = start_superlist[max_index_col]
+
+        list_two =duration_superlist[max_index_col]
+
+        #for i in range(0, max):
+        #    res_list.append(start_superlist[i]+ duration_superlist[i])
+        res_list = list(map(add, list_one, list_two))
+        print("reults of two list",res_list)
+        print("job_end",job_end)
+        print("Job_id", job_id_superlist[max_index_col], type(job_id_superlist[max_index_col]))
+        print("job start", start_superlist[max_index_col])
+        print("Job duration", duration_superlist[max_index_col])
+        print("Job end", job_end)
+        print( "At which machine ", machine_superlist[max_index_col])
+
+
+       
+        # "Duration": duration_superlist[max_index_col],
+        # d = {'Car': ['BMW', 'Lexus', 'Audi', 'Mercedes', 'Jaguar', 'Bentley'], 'Date_of_purchase': ['2020-10-10', '2020-10-12', '2020-10-17', '2020-10-16', '2020-10-19', '2020-10-22']
+        scenerio = {"Job": job_id_superlist[max_index_col],"start":start_superlist[max_index_col],"end": res_list  }
+        print("Scenerio:", scenerio)
+        dataFrame = pd.DataFrame(scenerio)
+        print("DataFrame...\n",dataFrame)
+        dataFrame.to_csv("C:\\Users\\imran\\PycharmProjects\\Industrial_smart_manufacturing_project\\smart_industry.csv")
+
+
+
+
+
+
+
+
 
 
 #-----------------#
@@ -325,7 +374,7 @@ sns.set()
 sns.lineplot(data=df.T)
 #pd.DataFrame([a_t].melt(var_name='episode',value_name='reward'))
 print(df.T)
-plt.show()
+#plt.show()
 #for i in range(len(l_a)):
 #    df.append(pd.DataFrame(l_a[i]).melt(var_name='episode',value_name='reward'))
 #prin(df)
