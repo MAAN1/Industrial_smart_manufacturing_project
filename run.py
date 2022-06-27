@@ -1,10 +1,8 @@
-
 import numpy as np
 import math
 import random
 from numpy import savez_compressed
 import csv
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,7 +10,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import deque
 from operator import add
-
 import matplotlib.pyplot as plt
 import pylab
 import seaborn as sns
@@ -23,11 +20,10 @@ from Deep_Learning_Part import DQN
 from Render_MultiAgentWS_Mask import Render_MultiAgent
 from Render_Res_MultiAgentWS_Mask import Render_Res_MultiAgent
 from Environment import Assembly_line_Env
-
 DEVICE = torch.device("cpu")
 env = Assembly_line_Env()
-EPISODES = 100
-Max_Steps = 300
+EPISODES = 50
+Max_Steps = 200
 Target_replace_feq = 50
 class DQNAgent():
     def __init__(self, state_size, action_size):
@@ -182,10 +178,15 @@ if __name__ == "__main__":
         agent_Task_WS1 = DQNAgent(state_size, action_size_task)
         model_Task_WS2 = DQN(state_size, action_size_task)
         agent_Task_WS2 = DQNAgent(state_size, action_size_task)
+        model_Task_WS3 = DQN(state_size, action_size_task)
+        agent_Task_WS3 = DQNAgent(state_size, action_size_task)
+
         model_Resource_WS1 = DQN(state_size, action_size_resource)
         agent_Resource_WS1 = DQNAgent(state_size, action_size_resource)
         model_Resource_WS2 = DQN(state_size, action_size_resource)
         agent_Resource_WS2 = DQNAgent(state_size, action_size_resource)
+        model_Resource_WS3 = DQN(state_size, action_size_resource)
+        agent_Resource_WS3 = DQNAgent(state_size, action_size_resource)
 
     # writer = SummaryWriter() section
 
@@ -199,6 +200,7 @@ if __name__ == "__main__":
             done = False
             score = 0
             loss_1 = 0
+            loss_5 = 0
             grade_to_num=0
             best_reward=0
             episode_number = []
@@ -206,8 +208,8 @@ if __name__ == "__main__":
             random_action_counter=0
             average_reward_number=[]
             alpha = 0.13
-            epsilon=math.exp(-e/(alpha*EPISODES))
-            #epsilon=1.0
+            #epsilon=math.exp(-e/(alpha*EPISODES))
+            epsilon=1.0
             state = env.reset()
             env.reset_variable()
             state = np.reshape(state, [1, state_size])
@@ -220,10 +222,13 @@ if __name__ == "__main__":
 
                 action_resource_WS1 = agent_Resource_WS1.get_action(state,epsilon)
                 action_resource_WS2 = agent_Resource_WS2.get_action(state,epsilon)
-                action_task_WS1, list_masked_task = agent_Task_WS1.get_action_mask_feasible(state, env, tasks_state_mask, work_state[0], null_act, epsilon)
-                action_task_WS2, list_masked_task = agent_Task_WS2.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon)
+                action_resource_WS3 = agent_Resource_WS3.get_action(state,epsilon)
 
-                check_twin = env.twin_check(action_task_WS1, action_task_WS2)
+                action_task_WS1, list_masked_task = agent_Task_WS1.get_action_mask_feasible(state, env, tasks_state_mask, work_state[0], null_act, epsilon)
+                action_task_WS3, list_masked_task = agent_Task_WS3.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon)
+                action_task_WS2, list_masked_task = agent_Task_WS3.get_action_mask_feasible(state,env,tasks_state_mask,work_state[1],null_act,epsilon)
+
+                check_twin = env.twin_check(action_task_WS1, action_task_WS2,action_task_WS3)
                 if check_twin==1:
                     action_temp = action_task_WS1
                     tasks_state_mask[action_task_WS1-1] = 1
@@ -233,7 +238,7 @@ if __name__ == "__main__":
                         random_action_counter +=1
                 #print("Action Proposed by agnts are:", action_task_WS1, action_task_WS2, "episode:", e)
                 #print("Action proposed by agents are:", action_resource_WS1, action_task_WS2, "episode:", e)
-                next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2)
+                next_state, reward, done, info = env.step(action_task_WS1, action_resource_WS1, action_task_WS2, action_resource_WS2, action_task_WS3, action_resource_WS3)
                 next_state = np.reshape(next_state, [1, state_size])
                 #print("Reward trend during current episode:", e, "Reward", reward )
 
@@ -241,7 +246,8 @@ if __name__ == "__main__":
                 agent_Task_WS1.append_sample(state, action_task_WS1, reward, next_state, done)
                 agent_Resource_WS1.append_sample(state, action_resource_WS1, reward, next_state, done)
                 agent_Task_WS2.append_sample(state, action_task_WS2, reward, next_state, done)
-                agent_Resource_WS2.append_sample(state, action_resource_WS2, reward, next_state, done)
+                agent_Task_WS3.append_sample(state, action_task_WS3, reward, next_state, done)
+                agent_Resource_WS2.append_sample(state, action_resource_WS3, reward, next_state, done)
                 # print("final reward for each agent:", score)
 
                 score += reward
@@ -258,6 +264,7 @@ if __name__ == "__main__":
                     #grade_to_num = torch.Tensor.detach(loss_1).numpy()
                     loss_2 = agent_Resource_WS1.train_model()
                     loss_3 = agent_Task_WS2.train_model()
+                    loss_5 = agent_Task_WS3.train_model()
                     loss_4 = agent_Resource_WS2.train_model()
 
                 """
@@ -315,11 +322,12 @@ if __name__ == "__main__":
 
         max_index_col = np.argmax(scores)
 
+
         res_list = []
         #for i in range(0, len(test_list1)):
         #    res_list.append(test_list1[i] + test_list2[i])
         #list_one= job_id_superlist[max_index_col]
-        print(max)
+        #print(max)
         list_one=[]
         list_two=[]
         res_list =[]
@@ -338,7 +346,38 @@ if __name__ == "__main__":
         print("Job duration", duration_superlist[max_index_col])
         print("Job end", job_end)
         print( "At which machine ", machine_superlist[max_index_col])
+        print("all job ", job_id_superlist.append(env.n_job_id))
 
+
+        # Resource
+        print("Resource_id", len(job_id_superlist_R[max_index_col]))
+        print("Resource assignment start, start_superlist_R[max_index_col]", len(start_superlist_R[max_index_col]))
+        print("Resource duration, duration_superlist_R[max_index_col]", len(duration_superlist_R))
+        #print("Job end", job_end)
+        print( "At which machine , machine_superlist_R[max_index_col]", len(machine_superlist_R[max_index_col]))
+
+        w_0,w_1,w_2 =[],[],[]
+        for i in range(len(job_id_superlist_R[max_index_col])):
+            for j in range( len(machine_superlist_R[max_index_col])):
+                if machine_superlist_R[max_index_col][j]==0:
+                    w_0.append(job_id_superlist_R[max_index_col][i])
+                elif machine_superlist_R[max_index_col][j]==1:
+                    w_1.append(job_id_superlist_R[max_index_col][i])
+                elif machine_superlist_R[max_index_col][j]==1:
+                    w_1.append(job_id_superlist_R[max_index_col][i])
+        #print("Workstation 0", len(w_0),np.sort(w_0))
+        #print("Workstation 1", len(w_1) ,np.sort(w_1))
+        #print("Workstation 2", len(w_2),np.sort(w_2))
+        #plt.plot(w_0)
+        #plt.plot(w_1)
+        #plt.show()
+
+
+        scenerio_r = {"Resource_ID": job_id_superlist_R[max_index_col],"start":start_superlist_R[max_index_col]  }
+        print("Scenerio:", scenerio_r)
+        dataFrame = pd.DataFrame(scenerio_r)
+        print("DataFrame...\n",dataFrame)
+        dataFrame.to_csv("C:\\Users\\imran\\PycharmProjects\\Industrial_smart_manufacturing_project\\smart_industry_r.csv")
 
        
         # "Duration": duration_superlist[max_index_col],
@@ -348,6 +387,39 @@ if __name__ == "__main__":
         dataFrame = pd.DataFrame(scenerio)
         print("DataFrame...\n",dataFrame)
         dataFrame.to_csv("C:\\Users\\imran\\PycharmProjects\\Industrial_smart_manufacturing_project\\smart_industry.csv")
+        mac_0= []
+        #for i in range(len(w_0)):
+         #   mac_0=w_0.count(job_id_superlist_R[max_index_col][i])
+        #import matplotlib.pyplot as plt
+
+
+        #create histogram with 4 bins
+
+        fig, axs = plt.subplots(1, 2, sharey=True, tight_layout=False)
+        axs[0].hist(w_0, bins=15, edgecolor='black')
+        axs[1].hist(w_1, bins=15, edgecolor='blue')
+
+
+        #plt.hist(w_0, bins=15, edgecolor='black')
+        #plt.hist(w_1, bins=15, edgecolor='black')
+        plt.show()
+
+#-----------------------#
+
+
+"""
+cat = ["bored", "happy", "bored", "bored", "happy", "bored"]
+dog = ["happy", "happy", "happy", "happy", "bored", "bored"]
+activity = ["combing", "drinking", "feeding", "napping", "playing", "washing"]
+
+fig, ax = plt.subplots()
+ax.plot(activity, dog, label="dog")
+ax.plot(activity, cat, label="cat")
+ax.legend()
+
+plt.show()
+
+"""
 
 
 
@@ -356,6 +428,8 @@ if __name__ == "__main__":
 
 
 
+
+#------------------------#
 
 
 #-----------------#
